@@ -2,10 +2,6 @@
 #include <string>
 #include <vector>
 
-#include "boost/foreach.hpp"
-#include "boost/scoped_ptr.hpp"
-#include "boost/shared_ptr.hpp"
-
 #include "ros/ros.h"
 
 #include "grizzly_motor_driver/driver.h"
@@ -21,8 +17,9 @@ public:
     nh_(nh),
     pnh_(pnh),
     interface_(interface),
-    freq_(10)
+    freq_(25)
   {
+    drivers_.push_back(grizzly_motor_driver::Driver(interface_, 5, "test"));
   }
 
   bool connectIfNotConnected()
@@ -53,14 +50,23 @@ public:
         ros::Duration(1.0).sleep();
         continue;
       }
+
+      for (grizzly_motor_driver::Driver& driver : drivers_)
+      {
+        driver.run();
+      }
+
       interface_.sendQueued();
       ros::spinOnce();
       interface_.sendQueued();
 
-      grizzly_motor_driver::Frame recv_frame;
-      while (interface_.receive(&recv_frame))
+      grizzly_motor_driver::Frame rx_frame;
+      while (interface_.receive(&rx_frame))
       {
-        ROS_INFO("Reading");
+        for (grizzly_motor_driver::Driver& driver : drivers_)
+        {
+          driver.readFrame(rx_frame);
+        }
       }
       rate.sleep();
     }
@@ -70,8 +76,7 @@ private:
   ros::NodeHandle nh_, pnh_;
   grizzly_motor_driver::Interface& interface_;
   std::vector<grizzly_motor_driver::Driver> drivers_;
-
-  int freq_;
+  double freq_;
 };
 
 
@@ -85,6 +90,7 @@ int main(int argc, char *argv[])
   if (!pnh.getParam("can_device", can_device))
   {
     ROS_FATAL("%s: No CAN device given.", node_name.c_str());
+    ros::shutdown();
     return -1;
   }
 

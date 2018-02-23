@@ -21,6 +21,7 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/driver.cpp
   src/interface.cpp
+  src/registers.cpp
 )
 
 target_link_libraries(grizzly_motor_driver

@@ -10,6 +10,7 @@ namespace grizzly_motor_driver
 class Register
 {
 public:
+  virtual ~Register() {}
   void setId(uint16_t id);
   uint16_t getId() const;
 protected:

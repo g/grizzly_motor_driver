@@ -4,25 +4,20 @@
 
 #include <stdint.h>
 
+#include "grizzly_motor_driver/register.h"
+
 namespace grizzly_motor_driver
 {
 
-class ErrorRegister: public Register
+class ErrorRegister : public Register
 {
 public:
-  ErrorRegister(uint16_t id, float min, float min_override = 0.0, float max, float max_override = 0.0,
-    float initial, float scale_);
+  ErrorRegister(const std::string &name){}
 
 private:
-  float min_;
-  float min_override_;
-  float max_;
-  float max_override_;
-  float default_;
-  float scale_;
-  float data_;
+  std::string name_;
 };
 
 }  // namespace grizzly_motor_driver
 
-#endif  // GRIZZLY_MOTOR_DRIVER_DATA_REGISTER_H
+#endif  // GRIZZLY_MOTOR_DRIVER_ERROR_REGISTER_H

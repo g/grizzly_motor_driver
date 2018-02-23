@@ -1,9 +1,5 @@
-#include <cstring>
-#include <iostream>
-#include <vector>
 
-#include "grizzly_motor_driver/driver.h"
-#include "grizzly_motor_driver/frame.h"
+#include "grizzly_motor_driver/interface.h"
 
 namespace grizzly_motor_driver
 {
@@ -16,14 +12,17 @@ Interface::Interface(const std::string &can_device) :
 
 Interface::~Interface()
 {
-  disconnect();
+  if (connected_)
+  {
+    disconnect();
+  }
 }
 
 bool Interface::connect()
 {
   if ((socket_ = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
     {
-      std::cout << "Error while opening socket." << std::endl;
+      std::cerr << "Error while opening socket." << std::endl;
       return false;
     }
 
@@ -34,7 +33,7 @@ bool Interface::connect()
     if (ioctl(socket_, SIOCGIFINDEX, &ifr) < 0)
     {
       close(socket_);
-      std::cout << "Error while trying to control device." << std::endl;
+      std::cerr << "Error while trying to control device." << std::endl;
       connected_ = false;
       return connected_;
     }
@@ -47,7 +46,7 @@ bool Interface::connect()
 
     if (bind(socket_, (struct sockaddr *)&addr, sizeof(addr)) < 0)
     {
-      std::cout << "Error in socket bind" << std::endl;
+      std::cerr << "Error in socket bind" << std::endl;
       connected_ = false;
       return connected_;
     }
@@ -74,8 +73,9 @@ bool Interface::disconnect()
   }
   else
   {
-    std::cout << "Unable to close Socket CAN on " << can_device_.c_str() << " due to errno " << ret << "." << std::endl;
+    std::cerr << "Unable to close Socket CAN on " << can_device_.c_str() << " due to errno " << ret << "." << std::endl;
   }
+  return connected_;
 }
 
 bool Interface::isConnected() const
@@ -85,7 +85,7 @@ bool Interface::isConnected() const
 
 bool Interface::connectIfNotConnected()
 {
-
+  return connected_;
 }
 
 bool Interface::receive(Frame *frame)
@@ -93,9 +93,11 @@ bool Interface::receive(Frame *frame)
   can_frame read_frame;
 
   int8_t ret = read(socket_, &read_frame, sizeof(struct can_frame));
+
   if (ret == sizeof(struct can_frame))
   {
-    printCanFrame(read_frame);
+    // printCanFrame(read_frame);
+    *frame = fromCanFrame(read_frame);
     return true;
   }
   else
@@ -104,16 +106,16 @@ bool Interface::receive(Frame *frame)
     {
       if (errno == EAGAIN)
       {
-        std::cout << "No more frames" << std::endl;
+        std::cerr << "No more frames." << std::endl;
       }
       else
       {
-        std::cout << "Error reading from socketcan: " << errno << std::endl;
+        std::cerr << "Error reading from socketcan: " << errno << "." << std::endl;
       }
     }
     else
     {
-      std::cout << "Socketcan read() returned unexpected size." << std::endl;
+    std::cerr << "Socketcan read() returned unexpected size." << std::endl;
     }
     return false;
   }
@@ -134,22 +136,21 @@ bool Interface::send(const can_frame *send_frame)
   int8_t ret = write(socket_, send_frame, sizeof(struct can_frame));
   if (ret == -1)
   {
-    std::cout << "Error in sending." << std::endl;
+    std::cerr << "Error in sending." << std::endl;
+    return false;
   }
   else if (ret < sizeof(struct can_frame))
   {
-    std::cout << "Error in sending, not all sent." << std::endl;
+    std::cerr << "Error in sending, not all bytes sent." << std::endl;
+    return false;
   }
-  else
-  {
-    std::cout << "Send was successful." << std::endl;
-  }
+  std::cout << "Send was successful." << std::endl;
+  return true;
 }
 
-bool Interface::sendQueued()
+void Interface::sendQueued()
 {
   for (auto &it : queue_outbound_)
-  //for (auto it = queue_outbound_.begin(); it != queue_outbound_.end(); ++it)
   {
     send(&it);
   }
@@ -157,29 +158,33 @@ bool Interface::sendQueued()
 }
 void Interface::printCanFrame(const can_frame &frame)
 {
-  std::cout << "CAN ID: " << std::hex << frame.can_id << "   Length : " << frame.can_dlc << "   Data: ";
-  for (auto i = 0; i < frame.can_dlc; i++)
+  std::cout << "CAN ID:0x" << std::hex << (frame.can_id);
+  std::cout << " Len:" << static_cast<int>(frame.can_dlc);
+  std::cout << " Data:[";
+  for (uint8_t i = 0; i < frame.can_dlc ; i++)
   {
-    std::cout << std::hex << frame.data[i] << " ";
+    std::cout << " " << std::hex << static_cast<int>(frame.data[i]);
   }
-  std::cout << std::endl;
+  std::cout << " ]" << std::endl;
 }
 
 can_frame Interface::toCanFrame(const Frame &frame)
 {
   can_frame ret_frame;
   ret_frame.can_id = frame.id;
-  ret_frame.can_id = ret_frame.can_id & CAN_EFF_MASK;
+  ret_frame.can_id = ret_frame.can_id | CAN_EFF_FLAG;
   ret_frame.can_dlc = frame.len;
   std::memcpy(ret_frame.data, frame.data.raw, frame.len);
+  return ret_frame;
 }
 
-Frame Interface::froCanFrame(const can_frame &frame)
+Frame Interface::fromCanFrame(const can_frame &frame)
 {
   Frame ret_frame;
-  ret_frame.id = frame.can_id;
+  ret_frame.id = frame.can_id & CAN_EFF_MASK;
   ret_frame.len = frame.can_dlc;
   std::memcpy(ret_frame.data.raw, frame.data, frame.can_dlc);
+  return ret_frame;
 }
 
 }  // namespace grizzly_motor_driver

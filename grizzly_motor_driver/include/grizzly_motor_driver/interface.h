@@ -2,8 +2,10 @@
 #ifndef GRIZZLY_MOTOR_DRIVER_INTERFACE_H
 #define GRIZZLY_MOTOR_DRIVER_INTERFACE_H
 
+#include <cstring>
 #include <fcntl.h>
 #include <poll.h>
+#include <iostream>
 #include <string>
 #include <stdio.h>
 #include <net/if.h>
@@ -35,11 +37,11 @@ public:
   void queue(const Frame &frame);
   void queue(const can_frame &send_frame);
   bool send(const can_frame *send_frame);
-  bool sendQueued();
+  void sendQueued();
 
   void printCanFrame(const can_frame &frame);
   can_frame toCanFrame(const Frame &frame);
-  Frame froCanFrame(const can_frame &frame);
+  Frame fromCanFrame(const can_frame &frame);
 
 private:
   std::string can_device_;

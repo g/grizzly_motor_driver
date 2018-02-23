@@ -4,21 +4,20 @@
 
 #include <stdint.h>
 
+#include "grizzly_motor_driver/register.h"
+
 namespace grizzly_motor_driver
 {
 
 class DataRegister: public Register
 {
 public:
-  DataRegister(uint16_t id, float min, float min_override = 0.0, float max, float max_override = 0.0,
-    float initial, float scale_);
+  DataRegister(const std::string &name, float min, float max, float value, float scale){}
 
 private:
   float min_;
-  float min_override_;
   float max_;
-  float max_override_;
-  float default_;
+  float value_;
   float scale_;
   float data_;
 };
