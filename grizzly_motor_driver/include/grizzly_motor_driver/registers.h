@@ -32,6 +32,10 @@ private:
 
   float io_scan_time_millis_;
   float system_voltage_;
+  float max_speed_forward_;
+  float max_speed_reverse_;
+  float accel_time_millis_;
+  float decel_time_millis_;
 };
 
 }  // namespace grizzly_motor_driver
