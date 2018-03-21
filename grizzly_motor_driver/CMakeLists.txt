@@ -21,6 +21,7 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/driver.cpp
   src/interface.cpp
+  src/register.cpp
   src/registers.cpp
 )
 

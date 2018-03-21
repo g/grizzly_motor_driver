@@ -2,6 +2,7 @@
 #ifndef GRIZZLY_MOTOR_DRIVER_DRIVER_H
 #define GRIZZLY_MOTOR_DRIVER_DRIVER_H
 
+#include <math.h>
 #include <memory>
 #include <stdint.h>
 #include <string>
@@ -17,6 +18,7 @@ class Driver
 public:
   Driver(Interface &interface, const uint8_t can_id, const std::string &name);
 
+  void configure();
   void run();
 
   void readFrame(const Frame &frame);
@@ -30,6 +32,9 @@ private:
   const std::string name_;
 
   uint8_t state_;
+  bool configured_;
+  uint16_t configuration_state_;
+  uint16_t total_configuration_states_;
 
   std::shared_ptr<Registers> registers_;
 };

@@ -22,7 +22,7 @@ bool Interface::connect()
 {
   if ((socket_ = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
     {
-      std::cerr << "Error while opening socket." << std::endl;
+      std::cout << "SocketCAN Interface: Error while opening socket." << std::endl;
       return false;
     }
 
@@ -33,7 +33,7 @@ bool Interface::connect()
     if (ioctl(socket_, SIOCGIFINDEX, &ifr) < 0)
     {
       close(socket_);
-      std::cerr << "Error while trying to control device." << std::endl;
+      std::cout << "SocketCAN Interface: Error while trying to control device." << std::endl;
       connected_ = false;
       return connected_;
     }
@@ -42,11 +42,11 @@ bool Interface::connect()
     addr.can_family  = AF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;
 
-    std::cout << can_device_.c_str() << " at index " <<  ifr.ifr_ifindex << "." << std::endl;
+    std::cout << "SocketCAN Interface: " << can_device_.c_str() << " at index " <<  ifr.ifr_ifindex << "." << std::endl;
 
     if (bind(socket_, (struct sockaddr *)&addr, sizeof(addr)) < 0)
     {
-      std::cerr << "Error in socket bind" << std::endl;
+      std::cout << "SocketCAN Interface: Error in socket bind." << std::endl;
       connected_ = false;
       return connected_;
     }
@@ -57,7 +57,7 @@ bool Interface::connect()
 
     setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
-    std::cout << "Opened Socket CAN on " << can_device_.c_str() << std::endl;
+    std::cout << "SocketCAN Interface: Opened socket on " << can_device_.c_str() << "." << std::endl;
     connected_ = true;
 
     return connected_;
@@ -68,12 +68,13 @@ bool Interface::disconnect()
   int ret = close(socket_);
   if (ret == 0)
   {
-    std::cout << "Closed Socket on CAN device: " << can_device_.c_str() << "." << std::endl;
+    std::cout << "SocketCAN Interface: Closed Socket on CAN device: " << can_device_.c_str() << "." << std::endl;
     connected_ = false;
   }
   else
   {
-    std::cerr << "Unable to close Socket CAN on " << can_device_.c_str() << " due to errno " << ret << "." << std::endl;
+    std::cout << "SocketCAN Interface: Unable to close Socket CAN on " << can_device_.c_str()
+      << " due to errno " << ret << "." << std::endl;
   }
   return connected_;
 }
@@ -106,16 +107,16 @@ bool Interface::receive(Frame *frame)
     {
       if (errno == EAGAIN)
       {
-        std::cerr << "No more frames." << std::endl;
+        std::cout << "SocketCAN Interface: No more frames." << std::endl;
       }
       else
       {
-        std::cerr << "Error reading from socketcan: " << errno << "." << std::endl;
+        std::cout << "SocketCAN Interface: Error reading from socket due to errno " << errno << "." << std::endl;
       }
     }
     else
     {
-    std::cerr << "Socketcan read() returned unexpected size." << std::endl;
+    std::cout << "SocketCAN Interface: Error reading returned unexpected size." << std::endl;
     }
     return false;
   }
@@ -136,15 +137,15 @@ bool Interface::send(const can_frame *send_frame)
   int8_t ret = write(socket_, send_frame, sizeof(struct can_frame));
   if (ret == -1)
   {
-    std::cerr << "Error in sending." << std::endl;
+    std::cout << "SocketCAN Interface: Error in sending." << std::endl;
     return false;
   }
   else if (ret < sizeof(struct can_frame))
   {
-    std::cerr << "Error in sending, not all bytes sent." << std::endl;
+    std::cout << "SocketCAN Interface: Error in sending, not all bytes sent." << std::endl;
     return false;
   }
-  std::cout << "Send was successful." << std::endl;
+  std::cout << "SocketCAN Interface: Send was successful." << std::endl;
   return true;
 }
 

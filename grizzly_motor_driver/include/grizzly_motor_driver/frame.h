@@ -19,7 +19,7 @@ struct Frame
       uint8_t dest_id;
       uint16_t dest_reg;
       uint8_t action;
-      uint32_t value;
+      int32_t value;
     };
     uint8_t raw[8];
   } data;
