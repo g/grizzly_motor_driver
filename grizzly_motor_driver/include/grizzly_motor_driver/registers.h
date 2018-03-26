@@ -24,6 +24,7 @@ public:
   std::vector<uint16_t> getIds() const;
   uint16_t getId(uint16_t i) const;
   uint16_t getWriteableId(uint16_t i) const;
+
 private:
   std::map<uint16_t, std::shared_ptr<Register> > registers_;
   uint32_t total_registers_;

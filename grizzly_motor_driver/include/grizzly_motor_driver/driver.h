@@ -20,11 +20,22 @@ public:
 
   void configure();
   void run();
+  void requestFeedback();
+  void requestStatus();
 
   void readFrame(const Frame &frame);
 
-  void readRegister(uint16_t id);
+  void requestRegister(uint16_t id);
+  void writeRegister(uint16_t id);
   void writeRegister(uint16_t id, float value);
+
+  bool isConfigured() const;
+  std::string getName() const;
+  uint8_t getId() const;
+  float getHeading() const;
+  uint16_t getRuntimeErrors() const;
+  float getDriverTemp() const;
+  float getInputVoltage() const;
 
 private:
   Interface& interface_;

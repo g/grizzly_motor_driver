@@ -7,11 +7,12 @@
 #include "grizzly_motor_driver/driver.h"
 #include "grizzly_motor_driver/frame.h"
 #include "grizzly_motor_driver/interface.h"
+#include "grizzly_motor_driver/node.h"
 
-class Node
+class TestInterface
 {
 public:
-  Node(ros::NodeHandle& nh,
+  TestInterface(ros::NodeHandle& nh,
        ros::NodeHandle& pnh,
        grizzly_motor_driver::Interface& interface) :
     nh_(nh),
@@ -20,6 +21,8 @@ public:
     freq_(25)
   {
     drivers_.push_back(grizzly_motor_driver::Driver(interface_, 5, "test"));
+
+    node_.reset(new grizzly_motor_driver::Node(nh_, drivers_));
   }
 
   bool connectIfNotConnected()
@@ -54,6 +57,12 @@ public:
       for (grizzly_motor_driver::Driver& driver : drivers_)
       {
         driver.run();
+        if (driver.isConfigured())
+        {
+          ROS_INFO("Req.");
+          driver.requestStatus();
+          driver.requestFeedback();
+        }
       }
 
       interface_.sendQueued();
@@ -76,6 +85,7 @@ private:
   ros::NodeHandle nh_, pnh_;
   grizzly_motor_driver::Interface& interface_;
   std::vector<grizzly_motor_driver::Driver> drivers_;
+  std::shared_ptr<grizzly_motor_driver::Node> node_;
   double freq_;
 };
 
@@ -96,6 +106,6 @@ int main(int argc, char *argv[])
 
   grizzly_motor_driver::Interface interface(can_device);
 
-  Node n(nh, pnh, interface);
+  TestInterface n(nh, pnh, interface);
   n.run();
 }

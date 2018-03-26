@@ -1,3 +1,4 @@
+#include <string>
 
 #include <ros/ros.h>
 
@@ -6,30 +7,31 @@
 namespace grizzly_motor_driver
 {
 
-  namespace States
+namespace States
+{
+  enum State
   {
-    enum State
-    {
-      Configure = 0,
-      CheckStartUpErrors,
-      VerifyStartUpErrors,
-      CheckHeading,
-      VerifyHeading,
-      CheckSro,
-      Stopped,
-      PreRunning,
-      Running,
-      Fault,
-      NumberOfStates
-    };
-  }  // namespace States
-  typedef States::State State;
+    Start = 0,
+    Configure,
+    CheckStartUpErrors,
+    VerifyStartUpErrors,
+    CheckHeading,
+    VerifyHeading,
+    CheckSro,
+    Stopped,
+    PreRunning,
+    Running,
+    Fault,
+    NumberOfStates
+  };
+}  // namespace States
+typedef States::State State;
 
 Driver::Driver(Interface &interface, const uint8_t can_id, const std::string &name) :
   interface_(interface),
   can_id_(can_id),
   name_(name),
-  state_(State::Configure),
+  state_(State::Start),
   configured_(false),
   registers_(std::shared_ptr<Registers>(new Registers()))
 {
@@ -42,7 +44,7 @@ void Driver::configure()
 
   if (configuration_state_ >= registers_->getNumberOfWriteableIds())
   {
-    ROS_INFO("Configured.");
+    ROS_INFO("%s was configured.", name_.c_str());
     configured_ = true;
     return;
   }
@@ -59,7 +61,8 @@ void Driver::configure()
     }
     else
     {
-      ROS_WARN("NOT A MATCH, got %d and wanted %d",
+      ROS_WARN("%s, trying to configure register %d failed, got %d and wanted %d. Retrying.",
+        name_.c_str(), reg,
         registers_->getRegister(reg)->getRawData(),
         registers_->getRegister(reg)->getRawInitial());
       writeRegister(reg, registers_->getRegister(reg)->sendInitial());
@@ -68,7 +71,7 @@ void Driver::configure()
   }
   else
   {
-    readRegister(reg);
+    requestRegister(reg);
   }
 }
 
@@ -76,6 +79,10 @@ void Driver::run()
 {
   switch (state_)
   {
+    case State::Start:
+      writeRegister(Registry::EnableKeySw, 0);
+      state_ = State::Configure;
+      break;
     case State::Configure:
       if (configured_)
       {
@@ -88,7 +95,7 @@ void Driver::run()
       break;
     case State::CheckStartUpErrors:
       ROS_INFO("Driver %i: State::CheckStartUpErrors", can_id_);
-      readRegister(Registry::StartUpErrors);
+      requestRegister(Registry::StartUpErrors);
       state_ = State::VerifyStartUpErrors;
       break;
     case State::VerifyStartUpErrors:
@@ -114,7 +121,7 @@ void Driver::run()
       break;
     case State::CheckHeading:
       ROS_INFO("Driver %i: State::CheckHeading", can_id_);
-      readRegister(Registry::Heading);
+      requestRegister(Registry::Heading);
       state_ = State::VerifyHeading;
       break;
     case State::VerifyHeading:
@@ -124,7 +131,6 @@ void Driver::run()
         if (registers_->getRegister(Registry::Heading)->getRawData() == 0)
         {
           state_ = State::CheckSro;
-          writeRegister(Registry::HeadingNetSelect, 170);
         }
         else
         {
@@ -141,7 +147,7 @@ void Driver::run()
       break;
     case State::CheckSro:
       ROS_INFO("Driver %i: State::CheckSro", can_id_);
-      readRegister(Registry::SroSw);
+      requestRegister(Registry::SroSw);
       state_ = State::Stopped;
       break;
     case State::Stopped:
@@ -165,22 +171,27 @@ void Driver::run()
       break;
     case State::PreRunning:
       ROS_INFO("PreRunning");
-      writeRegister(Registry::HeadingNetSelect, 170);
       writeRegister(Registry::EnableKeySw, 1);
       writeRegister(Registry::Heading, 0);
       state_ = State::Running;
       break;
     case State::Running:
       ROS_INFO("Running");
-      static int i = 0;
-      if (i < (25*5))
+      static uint32_t i = 0;
+      static uint32_t j = 1;
+      static int cmd = 190;
+      if (i < (250))
       {
-        writeRegister(Registry::Heading, 1200);
+        writeRegister(Registry::Heading, 190);
+        ROS_INFO("I: %d, J: %d, VEL: 190", i, j);
         i++;
       }
       else
-        writeRegister(Registry::Heading, 1200);
-
+      {
+        writeRegister(Registry::Heading, 160);
+        ROS_INFO("I: %d, J: %d, VEL: 160", i, j);
+        j++;
+      }
       break;
     case State::Fault:
       ROS_ERROR("Fault");
@@ -188,20 +199,32 @@ void Driver::run()
   }
 }
 
+void Driver::requestFeedback()
+{
+  requestRegister(Registry::RunTimeErrors);
+  requestRegister(Registry::SroSw);
+}
+
+void Driver::requestStatus()
+{
+  requestRegister(Registry::Temperature);
+  requestRegister(Registry::BatVoltage);
+}
+
 void Driver::readFrame(const Frame &frame)
 {
   if (frame.getCanId() != can_id_)
   {
-    ROS_INFO("Frame is not for me.");
+    ROS_INFO("%s: Frame is not for me.", name_.c_str());
     return;
   }
 
   if (frame.len < 8)
   {
-    ROS_INFO("Frame does not have enough data.");
+    ROS_INFO("%s: Frame does not have enough data.", name_.c_str());
     return;
   }
-  ROS_INFO("Got Frame for %d", frame.data.dest_reg);
+  ROS_INFO("%s: Got Frame for %d", name_.c_str(), frame.data.dest_reg);
   registers_->getRegister(frame.data.dest_reg)->setReceived();
   registers_->getRegister(frame.data.dest_reg)->setRawData(frame.data.value);
 
@@ -213,7 +236,7 @@ void Driver::readFrame(const Frame &frame)
   // ROS_INFO("Value 0x%08x", frame.data.value);
 }
 
-void Driver::readRegister(uint16_t id)
+void Driver::requestRegister(uint16_t id)
 {
   Frame tx_frame;
   tx_frame.id = 0x00000060;
@@ -237,4 +260,37 @@ void Driver::writeRegister(uint16_t id, float value)
   interface_.queue(tx_frame);
 }
 
+bool Driver::isConfigured() const
+{
+  return configured_;
+}
+
+std::string Driver::getName() const
+{
+  return name_;
+}
+uint8_t Driver::getId() const
+{
+  return can_id_;
+}
+
+float Driver::getHeading() const
+{
+  return registers_->getRegister(Registry::Heading)->getData();
+}
+
+uint16_t Driver::getRuntimeErrors() const
+{
+  return registers_->getRegister(Registry::RunTimeErrors)->getData();
+}
+
+float Driver::getDriverTemp() const
+{
+  return registers_->getRegister(Registry::Temperature)->getData();
+}
+
+float Driver::getInputVoltage() const
+{
+  return registers_->getRegister(Registry::BatVoltage)->getData();
+}
 }  // namespace grizzly_motor_driver

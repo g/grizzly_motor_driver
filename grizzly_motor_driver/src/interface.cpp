@@ -1,3 +1,4 @@
+#include <string>
 
 #include "grizzly_motor_driver/interface.h"
 

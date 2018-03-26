@@ -1,7 +1,8 @@
+#include <vector>
 
 #include "grizzly_motor_driver/registers.h"
 
-#define ADD_REG(id, name, initial, min, max, scale) registers_[id]=std::make_shared<Register>(name, initial, min, max, scale)
+#define ADD_REG(id, name, initial, min, max, scale) registers_[id] = std::make_shared<Register>(name, initial, min, max, scale)
 
 namespace grizzly_motor_driver
 {
@@ -16,7 +17,7 @@ Registers::Registers() :
 {
   ADD_REG(Registry::StartUpErrors, "START_UP_ERRORS", 0, 0, 65536, 1);
   ADD_REG(Registry::RunTimeErrors, "RUMTIME_ERRORS", 0, 0, 65536, 1);
-  //ADD_REG(Registry::CkCityAddress, "CK_CITY_ADDRESS", 5, 1, 127, 1);
+  //  ADD_REG(Registry::CkCityAddress, "CK_CITY_ADDRESS", 5, 1, 127, 1);
   ADD_REG(Registry::PreChargeVoltage, "PRE_CHARGE_VOLTAGE", 32, 48, 32, 1);
   ADD_REG(Registry::SystemVoltage, "SYSTEM_VOLTAGE", 48, 24, 48, 1);
   ADD_REG(Registry::AbsoluteCurrent, "ABSOLUTE_CURRENT", 300, 40, 450, 1);
@@ -45,8 +46,8 @@ Registers::Registers() :
   ADD_REG(Registry::HeartBeatTimer, "HEART_BEAT_TIMER", 100, 2, 16000, 1);
   ADD_REG(Registry::StatusUpdateEnable, "STATUS_UPDATE_ENABLE", 1, 0, 1, 1);
   ADD_REG(Registry::StatusUpdateTimer, "STATUS_UPDATE_TIMER", 5, 1, 16000, 1);
-  ADD_REG(Registry::HeadingAckEnable, "HEADING_ACK_ENABLE", 1, 0, 1, 1);
   ADD_REG(Registry::HeadingNetSelect, "HEADING_NET_SELECT", 170, 0, 170, 1);
+  ADD_REG(Registry::HeadingAckEnable, "HEADING_ACK_ENABLE", 1, 0, 1, 1);
   ADD_REG(Registry::IsoEnable, "ISO_ENABLE", 4, 0, 7, 1);
   ADD_REG(Registry::Pot1BrokenWireDetect, "POT_1_BROKEN_WIRE_DETECT", 0, 0, 1, 1);
 
@@ -66,13 +67,11 @@ Registers::Registers() :
   ADD_REG(Registry::BaseCharged, "BASE_CHARGED", 0, 0, 1, 1);
   ADD_REG(Registry::ControllerEnabled, "CONTROLLER_ENABLED", 0, 0, 1, 1);
   ADD_REG(Registry::StatusUpdate, "STATUS_UPDATE", 0, 0, 1, 1);
-  ADD_REG(Registry::EnableKeySw, "ENABLE_KEY_SW", 0, 0, 1, 1);
 
   for (const auto &it : registers_)
   {
     ids_.push_back(it.first);
   }
-
 }
 
 std::shared_ptr<Register> Registers::getRegister(const uint16_t id)

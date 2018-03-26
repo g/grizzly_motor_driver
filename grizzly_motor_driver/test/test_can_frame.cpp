@@ -6,7 +6,6 @@
 
 TEST(TestCanFrame, testCanFrameId)
 {
-
   for (uint8_t i = 1; i < 255; i++)
   {
     grizzly_motor_driver::Frame* test_frame = new grizzly_motor_driver::Frame(i);
