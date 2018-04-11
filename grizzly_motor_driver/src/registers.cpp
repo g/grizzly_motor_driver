@@ -17,7 +17,7 @@ Registers::Registers() :
 {
   ADD_REG(Registry::StartUpErrors, "START_UP_ERRORS", 0, 0, 65536, 1);
   ADD_REG(Registry::RunTimeErrors, "RUMTIME_ERRORS", 0, 0, 65536, 1);
-  //  ADD_REG(Registry::CkCityAddress, "CK_CITY_ADDRESS", 5, 1, 127, 1);
+  ADD_REG(Registry::CkCityAddress, "CK_CITY_ADDRESS", 5, 1, 127, 1);
   ADD_REG(Registry::PreChargeVoltage, "PRE_CHARGE_VOLTAGE", 32, 48, 32, 1);
   ADD_REG(Registry::SystemVoltage, "SYSTEM_VOLTAGE", 48, 24, 48, 1);
   ADD_REG(Registry::AbsoluteCurrent, "ABSOLUTE_CURRENT", 300, 40, 450, 1);
