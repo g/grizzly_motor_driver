@@ -201,12 +201,12 @@ void Driver::run()
 
 void Driver::requestFeedback()
 {
-  requestRegister(Registry::RunTimeErrors);
   requestRegister(Registry::SroSw);
 }
 
 void Driver::requestStatus()
 {
+  requestRegister(Registry::RunTimeErrors);
   requestRegister(Registry::Temperature);
   requestRegister(Registry::BatVoltage);
 }
@@ -219,6 +219,7 @@ void Driver::readFrame(const Frame &frame)
     return;
   }
 
+  // All frams from the TPM have 8 bytes of data.
   if (frame.len < 8)
   {
     ROS_INFO("%s: Frame does not have enough data.", name_.c_str());
@@ -282,6 +283,11 @@ float Driver::getHeading() const
 uint16_t Driver::getRuntimeErrors() const
 {
   return registers_->getRegister(Registry::RunTimeErrors)->getData();
+}
+
+uint16_t Driver::getStartupErrors() const
+{
+  return registers_->getRegister(Registry::StartUpErrors)->getData();
 }
 
 float Driver::getDriverTemp() const

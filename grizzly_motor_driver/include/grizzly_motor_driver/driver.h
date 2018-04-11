@@ -34,6 +34,7 @@ public:
   uint8_t getId() const;
   float getHeading() const;
   uint16_t getRuntimeErrors() const;
+  uint16_t getStartupErrors() const;
   float getDriverTemp() const;
   float getInputVoltage() const;
 

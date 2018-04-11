@@ -29,7 +29,7 @@ void Node::publishFeedback()
     grizzly_motor_msgs::Feedback* feedback = &feedback_msg_.feedbacks[index];
     feedback->device_number = driver.getId();
     feedback->device_name = driver.getName();
-    feedback->error_runtime = driver.getRuntimeErrors();
+
     index++;
   }
   feedback_msg_.header.stamp = ros::Time::now();
@@ -46,6 +46,8 @@ void Node::publishStatus()
     status->device_name = driver.getName();
     status->temperature_driver = driver.getDriverTemp();
     status->voltage_input = driver.getInputVoltage();
+    status->error_runtime = driver.getRuntimeErrors();
+    status->error_startup = driver.getStartupErrors();
     index++;
   }
   status_msg_.header.stamp = ros::Time::now();
