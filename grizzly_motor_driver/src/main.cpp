@@ -8,6 +8,7 @@
 #include "grizzly_motor_driver/frame.h"
 #include "grizzly_motor_driver/interface.h"
 #include "grizzly_motor_driver/node.h"
+#include "grizzly_motor_driver/diagnostic_updater.h"
 
 class TestInterface
 {
@@ -106,6 +107,7 @@ int main(int argc, char *argv[])
 
   grizzly_motor_driver::Interface interface(can_device);
 
+  grizzly_motor_driver::GrizzlyMotorDriverDiagnosticUpdater grizzly_motor_driver_diagnostic_updater;
   TestInterface n(nh, pnh, interface);
   n.run();
 }
