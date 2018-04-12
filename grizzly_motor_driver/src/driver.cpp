@@ -177,26 +177,15 @@ void Driver::run()
       break;
     case State::Running:
       ROS_INFO("Running");
-      static uint32_t i = 0;
-      static uint32_t j = 1;
-      static int cmd = 190;
-      if (i < (250))
-      {
-        writeRegister(Registry::Heading, 190);
-        ROS_INFO("I: %d, J: %d, VEL: 190", i, j);
-        i++;
-      }
-      else
-      {
-        writeRegister(Registry::Heading, 160);
-        ROS_INFO("I: %d, J: %d, VEL: 160", i, j);
-        j++;
-      }
-      break;
     case State::Fault:
       ROS_ERROR("Fault");
       break;
   }
+}
+
+void Driver::commandSpeed(double cmd)
+{
+  writeRegister(Registry::Heading, static_cast<float>(cmd));
 }
 
 void Driver::requestFeedback()
@@ -228,13 +217,6 @@ void Driver::readFrame(const Frame &frame)
   ROS_INFO("%s: Got Frame for %d", name_.c_str(), frame.data.dest_reg);
   registers_->getRegister(frame.data.dest_reg)->setReceived();
   registers_->getRegister(frame.data.dest_reg)->setRawData(frame.data.value);
-
-  // ROS_INFO("CAN ID 0x%08x", frame.id);
-  // ROS_INFO("DEVICE ID 0x%08x", frame.getCanId());
-  // ROS_INFO("Dest ID 0x%02x", frame.data.dest_id);
-  // ROS_INFO("Dest Reg 0x%04x", frame.data.dest_reg);
-  // ROS_INFO("Action 0x%02x", frame.data.action);
-  // ROS_INFO("Value 0x%08x", frame.data.value);
 }
 
 void Driver::requestRegister(uint16_t id)
@@ -275,6 +257,9 @@ uint8_t Driver::getId() const
   return can_id_;
 }
 
+/**************************************
+** Registry Getters
+**************************************/
 float Driver::getHeading() const
 {
   return registers_->getRegister(Registry::Heading)->getData();

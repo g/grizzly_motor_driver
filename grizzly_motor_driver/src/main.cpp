@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "ros/ros.h"
+#include "std_msgs/Float64.h"
 
 #include "grizzly_motor_driver/driver.h"
 #include "grizzly_motor_driver/frame.h"
@@ -13,17 +14,13 @@
 class TestInterface
 {
 public:
-  TestInterface(ros::NodeHandle& nh,
-       ros::NodeHandle& pnh,
-       grizzly_motor_driver::Interface& interface) :
-    nh_(nh),
-    pnh_(pnh),
-    interface_(interface),
-    freq_(25)
+  TestInterface(ros::NodeHandle& nh, ros::NodeHandle& pnh, grizzly_motor_driver::Interface& interface)
+    : nh_(nh), pnh_(pnh), interface_(interface), freq_(25)
   {
     drivers_.push_back(grizzly_motor_driver::Driver(interface_, 5, "test"));
 
     node_.reset(new grizzly_motor_driver::Node(nh_, drivers_));
+    velocitySub = pnh.subscribe("test_speed", 10, &TestInterface::velocityCB, this);
   }
 
   bool connectIfNotConnected()
@@ -82,16 +79,25 @@ public:
     }
   }
 
-private:
-  ros::NodeHandle nh_, pnh_;
+  void velocityCB(const std_msgs::Float64ConstPtr &msg)
+  {
+    for (grizzly_motor_driver::Driver& driver : drivers_)
+    {
+      driver.commandSpeed(msg->data);
+    }
+  }
+
+      private : ros::NodeHandle nh_,
+                pnh_;
   grizzly_motor_driver::Interface& interface_;
   std::vector<grizzly_motor_driver::Driver> drivers_;
   std::shared_ptr<grizzly_motor_driver::Node> node_;
   double freq_;
+  // temp sub for velocity testing
+  ros::Subscriber velocitySub;
 };
 
-
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   std::string node_name = "node";
   ros::init(argc, argv, node_name.c_str());

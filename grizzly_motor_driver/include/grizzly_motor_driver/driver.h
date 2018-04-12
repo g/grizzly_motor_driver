@@ -20,6 +20,7 @@ public:
 
   void configure();
   void run();
+  void commandSpeed(double cmd);
   void requestFeedback();
   void requestStatus();
 
