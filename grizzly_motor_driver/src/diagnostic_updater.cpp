@@ -30,41 +30,65 @@ typedef diagnostic_msgs::DiagnosticStatus Status;
 
 GrizzlyMotorDriverDiagnosticUpdater::GrizzlyMotorDriverDiagnosticUpdater()
 {
-  status_initialized_ = false;
-  feedback_initialized_ = false;
+  initialized_ = false;
   setHardwareID("none");
   status_sub_ = nh_.subscribe("status", 5, &GrizzlyMotorDriverDiagnosticUpdater::statusCallback, this);
-  feedback_sub_ = nh_.subscribe("feedback", 5, &GrizzlyMotorDriverDiagnosticUpdater::feedbackCallback, this);
 }
 
-const char* GrizzlyMotorDriverDiagnosticUpdater::getFaultString(uint16_t fault)
+const char* GrizzlyMotorDriverDiagnosticUpdater::getRuntimeString(uint16_t fault)
 {
   switch (fault)
   {
-    case grizzly_motor_msgs::Feedback::ERROR_RUNTIME_BRAKE_OVER_CURRENT:
+    case grizzly_motor_msgs::Status::ERROR_RUNTIME_BRAKE_OVER_CURRENT:
       return "brake over current fault";
-    case grizzly_motor_msgs::Feedback::ERROR_RUNTIME_HW_SHUTDOWN:
+    case grizzly_motor_msgs::Status::ERROR_RUNTIME_HW_SHUTDOWN:
       return "hardware shutdown fault";
-    case grizzly_motor_msgs::Feedback::ERROR_RUNTIME_POT1_OPEN:
+    case grizzly_motor_msgs::Status::ERROR_RUNTIME_POT1_OPEN:
       return "pot 1 open falt";
-    case grizzly_motor_msgs::Feedback::ERROR_RUNTIME_POT2_OPEN:
+    case grizzly_motor_msgs::Status::ERROR_RUNTIME_POT2_OPEN:
       return "pot 2 open falt";
-    case grizzly_motor_msgs::Feedback::ERROR_RUNTIME_BOTH_DIR_SWITCHES:
+    case grizzly_motor_msgs::Status::ERROR_RUNTIME_BOTH_DIR_SWITCHES:
       return "both direction switches enabled fault";
-    case grizzly_motor_msgs::Feedback::ERROR_RUNTIME_OVER_TEMP:
+    case grizzly_motor_msgs::Status::ERROR_RUNTIME_OVER_TEMP:
       return "over temp fault";
-    case grizzly_motor_msgs::Feedback::ERROR_RUNTIME_CURRENT_SENSOR_SATURATED:
+    case grizzly_motor_msgs::Status::ERROR_RUNTIME_CURRENT_SENSOR_SATURATED:
       return "current sensor saturated fault";
-    case grizzly_motor_msgs::Feedback::ERROR_RUNTIME_BATTERY_OVER_VOLTAGE_ON_START:
+    case grizzly_motor_msgs::Status::ERROR_RUNTIME_BATTERY_OVER_VOLTAGE_ON_START:
       return "battery over voltage on start fault";
-    case grizzly_motor_msgs::Feedback::ERROR_RUNTIME_BATTERY_UNDER_VOLTAGE_ON_START:
+    case grizzly_motor_msgs::Status::ERROR_RUNTIME_BATTERY_UNDER_VOLTAGE_ON_START:
       return "battery under volatge on start fault";
-    case grizzly_motor_msgs::Feedback::ERROR_RUNTIME_BASE_DISCHARGED:
+    case grizzly_motor_msgs::Status::ERROR_RUNTIME_BASE_DISCHARGED:
       return "base discharged fault";
     default:
       return "unknown fault";
   }
 }
+
+const char* GrizzlyMotorDriverDiagnosticUpdater::getStartupString(uint16_t fault)
+{
+  switch (fault)
+  {
+    case grizzly_motor_msgs::Status::ERROR_STARTUP_MIN_GREATER_THAN_MAX:
+      return "min greater than max fault";
+    case grizzly_motor_msgs::Status::ERROR_STARTUP_MAX_GREATER_THAN_MIN:
+      return "max greater than min fault";
+    case grizzly_motor_msgs::Status::ERROR_STARTUP_THROTTLE_RANGE_TOO_SMALL:
+      return "throttle range too small falt";
+    case grizzly_motor_msgs::Status::ERROR_STARTUP_THROTTLE_RANGE_TOO_LARGE:
+      return "throttle range too large falt";
+    case grizzly_motor_msgs::Status::ERROR_STARTUP_CURRENT_SENSOR_CALIBRATION:
+      return "current sensor calibration fault";
+    case grizzly_motor_msgs::Status::ERROR_STARTUP_HW_SHUT_DOWN:
+      return "hardware shutdown fault";
+    case grizzly_motor_msgs::Status::ERROR_STARTUP_WATCH_DOG_RESET:
+      return "watchdog reset fault";
+    case grizzly_motor_msgs::Status::ERROR_STARTUP_ERRORS:
+      return "startup fault";
+    default:
+      return "unknown fault";
+  }
+}
+
 
 void GrizzlyMotorDriverDiagnosticUpdater::temperatureDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat,
                                                                  int driver)
@@ -112,28 +136,36 @@ void GrizzlyMotorDriverDiagnosticUpdater::powerDiagnostics(diagnostic_updater::D
   stat.add("Current output to the motor (A)", last_status_->statuses[driver].current);
 }
 
-void GrizzlyMotorDriverDiagnosticUpdater::feedbackDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat,
+void GrizzlyMotorDriverDiagnosticUpdater::errorDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat,
                                                               int driver)
 {
-  if (last_feedback_->feedbacks[driver].error_runtime == 0)
+  if (last_status_->statuses[driver].error_startup == 0 && last_status_->statuses[driver].error_runtime == 0)
   {
     stat.summary(Status::OK, "Motor driver is OK.");
   }
-  else
+  else if (last_status_->statuses[driver].error_startup > 0)
   {
-    stat.summaryf(Status::ERROR, "'%s' driver (%i) has a %s.", (last_feedback_->feedbacks[driver].device_name.c_str()),
-                  last_feedback_->feedbacks[driver].device_number,
-                  getFaultString(last_feedback_->feedbacks[driver].error_runtime));
+    stat.summaryf(Status::ERROR, "'%s' driver (%i) has a %s on startup.", (last_status_->statuses[driver].device_name.c_str()),
+                  last_status_->statuses[driver].device_number,
+                  getStartupString(last_status_->statuses[driver].error_startup));
+  }
+  else if (last_status_->statuses[driver].error_runtime > 0)
+  {
+    stat.summaryf(Status::ERROR, "'%s' driver (%i) has a %s durring runtime.", (last_status_->statuses[driver].device_name.c_str()),
+                  last_status_->statuses[driver].device_number,
+                  getRuntimeString(last_status_->statuses[driver].error_runtime));
   }
 
-  stat.add("Driver CAN ID", static_cast<int>(last_feedback_->feedbacks[driver].device_number));
-  stat.add("Driver Role", last_feedback_->feedbacks[driver].device_name.c_str());
+  stat.add("Driver CAN ID", static_cast<int>(last_status_->statuses[driver].device_number));
+  stat.add("Driver Role", last_status_->statuses[driver].device_name.c_str());
+  stat.add("Startup Error Value", static_cast<int>(last_status_->statuses[driver].error_startup));
+  stat.add("Runtime Error Value", static_cast<int>(last_status_->statuses[driver].error_runtime));
 }
 
 void GrizzlyMotorDriverDiagnosticUpdater::statusCallback(const grizzly_motor_msgs::MultiStatus::ConstPtr& status_msg)
 {
   last_status_ = status_msg;
-  if (!status_initialized_)
+  if (!initialized_)
   {
     for (int i = 0; i < status_msg->statuses.size(); i++)
     {
@@ -142,37 +174,13 @@ void GrizzlyMotorDriverDiagnosticUpdater::statusCallback(const grizzly_motor_msg
                last_status_->statuses[i].device_name.c_str(), last_status_->statuses[i].device_number);
       add(name, boost::bind(&GrizzlyMotorDriverDiagnosticUpdater::temperatureDiagnostics, this, _1, i));
       add(name, boost::bind(&GrizzlyMotorDriverDiagnosticUpdater::powerDiagnostics, this, _1, i));
+      add(name, boost::bind(&GrizzlyMotorDriverDiagnosticUpdater::errorDiagnostics, this, _1, i));
     }
-    status_initialized_ = true;
+    initialized_ = true;
   }
   else
   {
     update();
-  }
-}
-
-void GrizzlyMotorDriverDiagnosticUpdater::feedbackCallback(
-    const grizzly_motor_msgs::MultiFeedback::ConstPtr& feedback_msg)
-{
-  last_feedback_ = feedback_msg;
-  if (!feedback_initialized_)
-  {
-    for (int i = 0; i < feedback_msg->feedbacks.size(); i++)
-    {
-      char name[100];
-      snprintf(name, sizeof(name), "Grizzly motor feedback on: %s with CAN ID (%d)",
-               last_feedback_->feedbacks[i].device_name.c_str(), last_feedback_->feedbacks[i].device_number);
-      add(name, boost::bind(&GrizzlyMotorDriverDiagnosticUpdater::feedbackDiagnostics, this, _1, i));
-    }
-    feedback_initialized_ = true;
-  }
-  for (auto& feedback : feedback_msg->feedbacks)
-  {
-    if (feedback.error_runtime > 0)
-    {
-      update();
-      break;
-    }
   }
 }
 

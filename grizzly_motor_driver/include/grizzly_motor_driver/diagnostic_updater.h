@@ -28,8 +28,6 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 #include "diagnostic_updater/publisher.h"
 #include "grizzly_motor_msgs/MultiStatus.h"
 #include "grizzly_motor_msgs/Status.h"
-#include "grizzly_motor_msgs/MultiFeedback.h"
-#include "grizzly_motor_msgs/Feedback.h"
 
 namespace grizzly_motor_driver
 {
@@ -40,21 +38,18 @@ public:
 
   void temperatureDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat, int driver);
   void powerDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat, int driver);
-  void feedbackDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat, int driver);
+  void errorDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat, int driver);
 
   void statusCallback(const grizzly_motor_msgs::MultiStatus::ConstPtr& status_msg);
-  void feedbackCallback(const grizzly_motor_msgs::MultiFeedback::ConstPtr& feedback_msg);
 
 private:
   ros::NodeHandle nh_;
   ros::Subscriber status_sub_;
-  ros::Subscriber feedback_sub_;
   grizzly_motor_msgs::MultiStatus::ConstPtr last_status_;
-  grizzly_motor_msgs::MultiFeedback::ConstPtr last_feedback_;
-  bool status_initialized_;
-  bool feedback_initialized_;
+  bool initialized_;
 
-  static const char* getFaultString(uint16_t fault);
+  static const char* getRuntimeString(uint16_t fault);
+  static const char* getStartupString(uint16_t fault);
 };
 
 }  // namespace grizzly_motor_driver
