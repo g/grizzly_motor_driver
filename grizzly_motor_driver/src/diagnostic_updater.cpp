@@ -66,27 +66,50 @@ const char* GrizzlyMotorDriverDiagnosticUpdater::getFaultString(uint16_t fault)
   }
 }
 
-void GrizzlyMotorDriverDiagnosticUpdater::statusDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat,
-                                                            int driver)
+void GrizzlyMotorDriverDiagnosticUpdater::temperatureDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat,
+                                                                 int driver)
 {
-  if (last_status_->statuses[driver].temperature_driver < 65.0)
-  {
-    stat.summary(Status::OK, "Motor driver is OK.");
-  }
-  // else
-  // {
-  //   stat.summaryf(Status::ERROR, "'%s' driver (%i) has a %s.", (last_status_->statuses[driver].device_name.c_str()),
-  //                 last_status_->statuses[driver].device_number, getFaultString(last_status_->statuses[driver].fault));
-  // }
-
   stat.add("Driver CAN ID", static_cast<int>(last_status_->statuses[driver].device_number));
   stat.add("Driver Role", last_status_->statuses[driver].device_name.c_str());
 
   stat.add("Internal driver temperature (degC)", last_status_->statuses[driver].temperature_driver);
   stat.add("Motor temperature (degC)", last_status_->statuses[driver].temperature_motor);
 
+  if (last_status_->statuses[driver].temperature_driver < 75.0 &&
+      last_status_->statuses[driver].temperature_motor < 75.0)
+  {
+    stat.summary(Status::OK, "Motor tempratures are OK.");
+  }
+  else if (last_status_->statuses[driver].temperature_driver < 90.0 &&
+           last_status_->statuses[driver].temperature_motor < 90.0)
+  {
+    stat.summary(Status::WARN, "Motor tempratures are HIGH.");
+  }
+  else
+  {
+    stat.summary(Status::ERROR, "Motor tempratures are TOO HIGH.");
+  }
+}
+
+void GrizzlyMotorDriverDiagnosticUpdater::powerDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat,
+                                                           int driver)
+{
+
+  if (last_status_->statuses[driver].voltage_input > 35)
+  {
+    stat.summary(Status::OK, "Motor power is OK.");
+  }
+  else
+  {
+    stat.summary(Status::ERROR, "Motor voltage is LOW.");
+  }
+
+  stat.add("Driver CAN ID", static_cast<int>(last_status_->statuses[driver].device_number));
+  stat.add("Driver Role", last_status_->statuses[driver].device_name.c_str());
+
   stat.add("Voltage at motor controller input terminal (V)", last_status_->statuses[driver].voltage_input);
   stat.add("Voltage output to the motor (V)", last_status_->statuses[driver].voltage_output);
+  stat.add("Current output to the motor (A)", last_status_->statuses[driver].current);
 }
 
 void GrizzlyMotorDriverDiagnosticUpdater::feedbackDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat,
@@ -115,9 +138,10 @@ void GrizzlyMotorDriverDiagnosticUpdater::statusCallback(const grizzly_motor_msg
     for (int i = 0; i < status_msg->statuses.size(); i++)
     {
       char name[100];
-      snprintf(name, sizeof(name), "Grizzly motor driver on: %s with CAN ID (%d)",
+      snprintf(name, sizeof(name), "Grizzly motor status on: %s with CAN ID (%d)",
                last_status_->statuses[i].device_name.c_str(), last_status_->statuses[i].device_number);
-      add(name, boost::bind(&GrizzlyMotorDriverDiagnosticUpdater::statusDiagnostics, this, _1, i));
+      add(name, boost::bind(&GrizzlyMotorDriverDiagnosticUpdater::temperatureDiagnostics, this, _1, i));
+      add(name, boost::bind(&GrizzlyMotorDriverDiagnosticUpdater::powerDiagnostics, this, _1, i));
     }
     status_initialized_ = true;
   }
@@ -136,7 +160,7 @@ void GrizzlyMotorDriverDiagnosticUpdater::feedbackCallback(
     for (int i = 0; i < feedback_msg->feedbacks.size(); i++)
     {
       char name[100];
-      snprintf(name, sizeof(name), "Grizzly motor driver on: %s with CAN ID (%d)",
+      snprintf(name, sizeof(name), "Grizzly motor feedback on: %s with CAN ID (%d)",
                last_feedback_->feedbacks[i].device_name.c_str(), last_feedback_->feedbacks[i].device_number);
       add(name, boost::bind(&GrizzlyMotorDriverDiagnosticUpdater::feedbackDiagnostics, this, _1, i));
     }

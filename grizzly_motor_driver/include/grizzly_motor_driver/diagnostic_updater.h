@@ -38,7 +38,8 @@ class GrizzlyMotorDriverDiagnosticUpdater : private diagnostic_updater::Updater
 public:
   GrizzlyMotorDriverDiagnosticUpdater();
 
-  void statusDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat, int driver);
+  void temperatureDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat, int driver);
+  void powerDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat, int driver);
   void feedbackDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat, int driver);
 
   void statusCallback(const grizzly_motor_msgs::MultiStatus::ConstPtr& status_msg);
