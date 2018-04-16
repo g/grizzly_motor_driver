@@ -33,7 +33,8 @@ Driver::Driver(Interface &interface, const uint8_t can_id, const std::string &na
   name_(name),
   state_(State::Start),
   configured_(false),
-  registers_(std::shared_ptr<Registers>(new Registers()))
+  registers_(std::shared_ptr<Registers>(new Registers())),
+  speed_(0)
 {
   configuration_state_ = 0;
 }
@@ -176,26 +177,41 @@ void Driver::run()
       state_ = State::Running;
       break;
     case State::Running:
+      commandSpeed();
+      writeRegister(501, 543);
       ROS_INFO("Running");
+      break;
     case State::Fault:
       ROS_ERROR("Fault");
       break;
   }
 }
 
-void Driver::commandSpeed(double cmd)
+bool Driver::commandSpeed()
 {
-  writeRegister(Registry::Heading, static_cast<float>(cmd));
+  if (state_ == State::Running)
+  {
+    writeRegister(Registry::Heading, speed_);
+    return(true);
+  }
+  return(false);
+}
+
+void Driver::setSpeed(double cmd)
+{
+  speed_ = static_cast<int32_t>(cmd);
 }
 
 void Driver::requestFeedback()
 {
   requestRegister(Registry::SroSw);
+  requestRegister(Registry::Heading);
 }
 
 void Driver::requestStatus()
 {
   requestRegister(Registry::RunTimeErrors);
+  requestRegister(Registry::StartUpErrors);
   requestRegister(Registry::Temperature);
   requestRegister(Registry::BatVoltage);
 }
@@ -204,7 +220,7 @@ void Driver::readFrame(const Frame &frame)
 {
   if (frame.getCanId() != can_id_)
   {
-    ROS_INFO("%s: Frame is not for me.", name_.c_str());
+    ROS_DEBUG("%s: Frame is not for me.", name_.c_str());
     return;
   }
 
@@ -214,9 +230,16 @@ void Driver::readFrame(const Frame &frame)
     ROS_INFO("%s: Frame does not have enough data.", name_.c_str());
     return;
   }
-  ROS_INFO("%s: Got Frame for %d", name_.c_str(), frame.data.dest_reg);
-  registers_->getRegister(frame.data.dest_reg)->setReceived();
-  registers_->getRegister(frame.data.dest_reg)->setRawData(frame.data.value);
+  //ROS_INFO("%s: Got Frame for %d", name_.c_str(), frame.data.dest_reg)
+  if (frame.data.dest_reg == Registry::Heading)
+  {
+    ROS_ERROR("%s: Heading Frame: %i is: %i.", name_.c_str(), frame.data.dest_reg, frame.data.value);
+  }
+  if (registers_->getRegister(frame.data.dest_reg))
+  {
+    registers_->getRegister(frame.data.dest_reg)->setReceived();
+    registers_->getRegister(frame.data.dest_reg)->setRawData(frame.data.value);
+  }
 }
 
 void Driver::requestRegister(uint16_t id)
@@ -233,6 +256,9 @@ void Driver::requestRegister(uint16_t id)
 
 void Driver::writeRegister(uint16_t id, float value)
 {
+  if(id == Registry::Heading){
+    ROS_ERROR("Writing Heading with value %d", static_cast<int32_t> (value));
+  }
   Frame tx_frame;
   tx_frame.id = 0x00000060;
   tx_frame.len = 8;

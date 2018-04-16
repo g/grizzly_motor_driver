@@ -12,19 +12,18 @@
 
 namespace grizzly_motor_driver
 {
-
 class Driver
 {
 public:
-  Driver(Interface &interface, const uint8_t can_id, const std::string &name);
+  Driver(Interface& interface, const uint8_t can_id, const std::string& name);
 
   void configure();
   void run();
-  void commandSpeed(double cmd);
+  void setSpeed(double cmd);
   void requestFeedback();
   void requestStatus();
 
-  void readFrame(const Frame &frame);
+  void readFrame(const Frame& frame);
 
   void requestRegister(uint16_t id);
   void writeRegister(uint16_t id);
@@ -48,6 +47,9 @@ private:
   bool configured_;
   uint16_t configuration_state_;
   uint16_t total_configuration_states_;
+
+  bool commandSpeed();
+  uint32_t speed_;
 
   std::shared_ptr<Registers> registers_;
 };

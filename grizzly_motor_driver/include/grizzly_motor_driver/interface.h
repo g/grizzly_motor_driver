@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <vector>
 #include <unistd.h>
+#include <mutex>
 
 #include <linux/can.h>
 #include <linux/can/raw.h>
@@ -47,6 +48,9 @@ private:
   std::string can_device_;
   int socket_;
   bool connected_;
+
+  std::mutex mutex_inbound_;
+  std::mutex mutex_outbound_;
 
   std::vector<can_frame> queue_inbound_;
   std::vector<can_frame> queue_outbound_;

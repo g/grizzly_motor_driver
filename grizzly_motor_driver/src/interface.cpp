@@ -125,11 +125,13 @@ bool Interface::receive(Frame *frame)
 
 void Interface::queue(const Frame &frame)
 {
+  std::lock_guard<std::mutex> lock(mutex_outbound_);
   queue_outbound_.push_back(toCanFrame(frame));
 }
 
 void Interface::queue(const can_frame &send_frame)
 {
+  std::lock_guard<std::mutex> lock(mutex_outbound_);
   queue_outbound_.push_back(send_frame);
 }
 
@@ -152,6 +154,7 @@ bool Interface::send(const can_frame *send_frame)
 
 void Interface::sendQueued()
 {
+  std::lock_guard<std::mutex> lock(mutex_outbound_);
   for (auto &it : queue_outbound_)
   {
     send(&it);

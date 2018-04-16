@@ -95,7 +95,8 @@ namespace Registries
     ControllerEnabled = 247,
     ResetController = 248,
     StatusUpdate = 255,
-    EnableKeySw = 500
+    EnableKeySw = 500,
+    CommandSpeed = 501
   };
 }  // namespace Registries
 typedef Registries::Registry Registry;
