@@ -172,13 +172,13 @@ void Driver::run()
       break;
     case State::PreRunning:
       ROS_INFO("PreRunning");
-      writeRegister(Registry::EnableKeySw, 1);
-      writeRegister(Registry::Heading, 0);
+     writeRegister(Registry::EnableKeySw, 1);
+     writeRegister(Registry::Heading, 0);
       state_ = State::Running;
       break;
     case State::Running:
       commandSpeed();
-      writeRegister(501, 543);
+    //  writeRegister(501, 543);
       ROS_INFO("Running");
       break;
     case State::Fault:
@@ -205,7 +205,6 @@ void Driver::setSpeed(double cmd)
 void Driver::requestFeedback()
 {
   requestRegister(Registry::SroSw);
-  requestRegister(Registry::Heading);
 }
 
 void Driver::requestStatus()
@@ -309,5 +308,10 @@ float Driver::getDriverTemp() const
 float Driver::getInputVoltage() const
 {
   return registers_->getRegister(Registry::BatVoltage)->getData();
+}
+
+float Driver::getOutputVoltage() const
+{
+  return registers_->getRegister(Registry::MotVoltage)->getData();
 }
 }  // namespace grizzly_motor_driver

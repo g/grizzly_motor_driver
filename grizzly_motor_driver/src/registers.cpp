@@ -36,7 +36,7 @@ Registers::Registers() :
   ADD_REG(Registry::SroDebounceTime, "SRO_DEBOUCE_TIME", 250, 2000, 32, io_scan_time_millis_);
   ADD_REG(Registry::AnalogOutFunction, "ANALOG_OUT_FUNCTION", 0, 0, 5, 1);
   ADD_REG(Registry::AnalogOutVoltage, "ANALOG_OUT_VOLTAGE", 12, 21, 48, 1);
-  ADD_REG(Registry::NeutralToStopTime, "NEUTRAL_TO_STOP_TIME", 60, 0.002, 60, io_scan_time_millis_ / 1000.0);
+  ADD_REG(Registry::NeutralToStopTime, "NEUTRAL_TO_STOP_TIME", 3, 0.002, 60, io_scan_time_millis_ / 1000.0);
   ADD_REG(Registry::IOScanTime, "I_O_SCAN_TIME", io_scan_time_millis_, 2, 40, 1);
   ADD_REG(Registry::SafeSeqEnable, "SAFE_SEQ_ENABLE", 0, 0, 1, 1);
   ADD_REG(Registry::IrComp, "IR_COMP", 10, 0, 100, 1);
@@ -48,7 +48,7 @@ Registers::Registers() :
   ADD_REG(Registry::StatusUpdateTimer, "STATUS_UPDATE_TIMER", 5, 1, 16000, 1);
   ADD_REG(Registry::HeadingNetSelect, "HEADING_NET_SELECT", 170, 0, 170, 1);
   ADD_REG(Registry::HeadingAckEnable, "HEADING_ACK_ENABLE", 1, 0, 1, 1);
-  ADD_REG(Registry::IsoEnable, "ISO_ENABLE", 4, 0, 7, 1);
+  ADD_REG(Registry::IsoEnable, "ISO_ENABLE", 0, 0, 7, 1);
   ADD_REG(Registry::Pot1BrokenWireDetect, "POT_1_BROKEN_WIRE_DETECT", 0, 0, 1, 1);
 
   for (const auto &it : registers_)

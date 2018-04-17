@@ -37,6 +37,7 @@ public:
   uint16_t getStartupErrors() const;
   float getDriverTemp() const;
   float getInputVoltage() const;
+  float getOutputVoltage() const;
 
 private:
   Interface& interface_;
