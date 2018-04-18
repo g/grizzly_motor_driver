@@ -6,6 +6,7 @@
 #include <memory>
 #include <stdint.h>
 #include <string>
+#include <atomic>
 
 #include "grizzly_motor_driver/registers.h"
 #include "grizzly_motor_driver/interface.h"
@@ -50,7 +51,7 @@ private:
   uint16_t total_configuration_states_;
 
   bool commandSpeed();
-  uint32_t speed_;
+  std::atomic<uint32_t> speed_;
 
   std::shared_ptr<Registers> registers_;
 };

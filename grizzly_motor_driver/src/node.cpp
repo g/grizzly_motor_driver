@@ -7,7 +7,7 @@
 namespace grizzly_motor_driver
 {
 
-Node::Node(ros::NodeHandle& nh, std::vector<grizzly_motor_driver::Driver>& drivers) :
+Node::Node(ros::NodeHandle& nh, std::vector<std::shared_ptr<grizzly_motor_driver::Driver>>  drivers) :
   nh_(nh),
   drivers_(drivers)
 {
@@ -27,8 +27,8 @@ void Node::publishFeedback()
   for (const auto &driver : drivers_)
   {
     grizzly_motor_msgs::Feedback* feedback = &feedback_msg_.feedbacks[index];
-    feedback->device_number = driver.getId();
-    feedback->device_name = driver.getName();
+    feedback->device_number = driver->getId();
+    feedback->device_name = driver->getName();
 
     index++;
   }
@@ -42,13 +42,13 @@ void Node::publishStatus()
   for (const auto &driver : drivers_)
   {
     grizzly_motor_msgs::Status* status = &status_msg_.statuses[index];
-    status->device_number = driver.getId();
-    status->device_name = driver.getName();
-    status->temperature_driver = driver.getDriverTemp();
-    status->voltage_input = driver.getInputVoltage();
-    status->voltage_output = driver.getOutputVoltage();
-    status->error_runtime = driver.getRuntimeErrors();
-    status->error_startup = driver.getStartupErrors();
+    status->device_number = driver->getId();
+    status->device_name = driver->getName();
+    status->temperature_driver = driver->getDriverTemp();
+    status->voltage_input = driver->getInputVoltage();
+    status->voltage_output = driver->getOutputVoltage();
+    status->error_runtime = driver->getRuntimeErrors();
+    status->error_startup = driver->getStartupErrors();
     index++;
   }
   status_msg_.header.stamp = ros::Time::now();

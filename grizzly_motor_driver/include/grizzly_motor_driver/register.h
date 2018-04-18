@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <atomic>
 
 namespace grizzly_motor_driver
 {
@@ -124,10 +125,10 @@ private:
   float max_;
   float initial_;
   int32_t raw_initial_;
-  float data_;
+  std::atomic<float> data_;
   int32_t raw_data_;
   float scale_;
-  bool received_;
+  std::atomic<bool> received_;
 };
 
 }  // namespace grizzly_motor_driver

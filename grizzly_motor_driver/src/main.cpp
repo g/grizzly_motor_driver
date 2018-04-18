@@ -1,7 +1,5 @@
-
 #include <string>
 #include <vector>
-#include <mutex>
 
 #include "ros/ros.h"
 #include "std_msgs/Float64.h"
@@ -18,7 +16,8 @@ public:
   TestInterface(ros::NodeHandle& nh, ros::NodeHandle& pnh, grizzly_motor_driver::Interface& interface)
     : nh_(nh), pnh_(pnh), interface_(interface), freq_(25)
   {
-    drivers_.push_back(grizzly_motor_driver::Driver(interface_, 5, "test"));
+    drivers_.push_back(
+        std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 5, "test")));
 
     node_.reset(new grizzly_motor_driver::Node(nh_, drivers_));
     velocitySub = pnh.subscribe("test_speed", 1, &TestInterface::velocityCB, this);
@@ -52,17 +51,15 @@ public:
         ros::Duration(1.0).sleep();
         continue;
       }
+
+      for (std::shared_ptr<grizzly_motor_driver::Driver>& driver : drivers_)
       {
-        std::lock_guard<std::mutex> lock(driver_mutex_);
-        for (grizzly_motor_driver::Driver& driver : drivers_)
+        driver->run();
+        if (driver->isConfigured())
         {
-          driver.run();
-          if (driver.isConfigured())
-          {
-            ROS_INFO("Req.");
-            driver.requestStatus();
-            driver.requestFeedback();
-          }
+          ROS_INFO("Req.");
+          driver->requestStatus();
+          driver->requestFeedback();
         }
       }
 
@@ -73,10 +70,9 @@ public:
       grizzly_motor_driver::Frame rx_frame;
       while (interface_.receive(&rx_frame))
       {
-        std::lock_guard<std::mutex> lock(driver_mutex_);
-        for (grizzly_motor_driver::Driver& driver : drivers_)
+        for (std::shared_ptr<grizzly_motor_driver::Driver>& driver : drivers_)
         {
-          driver.readFrame(rx_frame);
+          driver->readFrame(rx_frame);
         }
       }
       rate.sleep();
@@ -85,23 +81,20 @@ public:
 
   void velocityCB(const std_msgs::Float64ConstPtr& msg)
   {
-    std::lock_guard<std::mutex> lock(driver_mutex_);
-    for (grizzly_motor_driver::Driver& driver : drivers_)
+    for (std::shared_ptr<grizzly_motor_driver::Driver>& driver : drivers_)
     {
-      driver.setSpeed(msg->data);
+      driver->setSpeed(msg->data);
     }
   }
 
 private:
   ros::NodeHandle nh_, pnh_;
   grizzly_motor_driver::Interface& interface_;
-  std::vector<grizzly_motor_driver::Driver> drivers_;
+  std::vector<std::shared_ptr<grizzly_motor_driver::Driver>> drivers_;
   std::shared_ptr<grizzly_motor_driver::Node> node_;
   double freq_;
   // temp sub for velocity testing
   ros::Subscriber velocitySub;
-
-  std::mutex driver_mutex_;
 };
 
 int main(int argc, char* argv[])

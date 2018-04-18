@@ -18,7 +18,7 @@ namespace grizzly_motor_driver
 class Node
 {
 public:
-  Node(ros::NodeHandle& nh, std::vector<grizzly_motor_driver::Driver>& drivers);
+  Node(ros::NodeHandle& nh, std::vector<std::shared_ptr<grizzly_motor_driver::Driver>> drivers);
 
   void publishFeedback();
   void publishStatus();
@@ -27,7 +27,7 @@ public:
 
 private:
   ros::NodeHandle nh_;
-  std::vector<grizzly_motor_driver::Driver>& drivers_;
+  std::vector<std::shared_ptr<grizzly_motor_driver::Driver>> drivers_;
 
   grizzly_motor_msgs::MultiStatus status_msg_;
   grizzly_motor_msgs::MultiFeedback feedback_msg_;

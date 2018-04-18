@@ -1,4 +1,3 @@
-
 #ifndef GRIZZLY_MOTOR_DRIVER_REGISTERS_H
 #define GRIZZLY_MOTOR_DRIVER_REGISTERS_H
 
@@ -13,7 +12,6 @@
 
 namespace grizzly_motor_driver
 {
-
 class Registers
 {
 public:
