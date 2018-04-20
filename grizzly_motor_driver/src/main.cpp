@@ -14,10 +14,17 @@ class TestInterface
 {
 public:
   TestInterface(ros::NodeHandle& nh, ros::NodeHandle& pnh, grizzly_motor_driver::Interface& interface)
-    : nh_(nh), pnh_(pnh), interface_(interface), freq_(25)
+    : nh_(nh), pnh_(pnh), interface_(interface), freq_(200), status_divisor_(3), active_(false)
   {
     drivers_.push_back(
-        std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 5, "test")));
+       std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 3, "test1")));
+    drivers_.push_back(
+      std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 4, "test2")));
+    drivers_.push_back(
+       std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 5, "test3")));
+    drivers_.push_back(
+      std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 6, "test4")));
+
 
     node_.reset(new grizzly_motor_driver::Node(nh_, drivers_));
     velocitySub = pnh.subscribe("test_speed", 1, &TestInterface::velocityCB, this);
@@ -52,15 +59,21 @@ public:
         continue;
       }
 
-      for (std::shared_ptr<grizzly_motor_driver::Driver>& driver : drivers_)
+      if (isActive())
       {
-        driver->run();
-        if (driver->isConfigured())
+        for (std::shared_ptr<grizzly_motor_driver::Driver>& driver : drivers_)
         {
-          ROS_INFO("Req.");
-          driver->requestStatus();
-          driver->requestFeedback();
+          driver->run();
+          if (status_divisor_ == driver->getId())
+          {
+            ROS_INFO("Req. %d", status_divisor_);
+            driver->requestStatus();
+            //driver->requestFeedback();
+          }
         }
+        status_divisor_++;
+        if (status_divisor_ > 6) //first address is 3
+          status_divisor_ = 3;
       }
 
       interface_.sendQueued();
@@ -87,12 +100,27 @@ public:
     }
   }
 
+  bool isActive()
+  {
+    for (std::shared_ptr<grizzly_motor_driver::Driver>& driver : drivers_)
+    {
+      if (!driver->isConfigured())
+      {
+        active_ = false;
+        return false;
+      }
+    }
+    active_ = true;
+    return true;
+  }
 private:
   ros::NodeHandle nh_, pnh_;
   grizzly_motor_driver::Interface& interface_;
   std::vector<std::shared_ptr<grizzly_motor_driver::Driver>> drivers_;
   std::shared_ptr<grizzly_motor_driver::Node> node_;
   double freq_;
+  uint8_t status_divisor_;
+  bool active_;
   // temp sub for velocity testing
   ros::Subscriber velocitySub;
 };

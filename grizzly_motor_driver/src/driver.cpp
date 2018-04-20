@@ -33,7 +33,7 @@ Driver::Driver(Interface &interface, const uint8_t can_id, const std::string &na
   name_(name),
   state_(State::Start),
   configured_(false),
-  registers_(std::shared_ptr<Registers>(new Registers())),
+  registers_(std::shared_ptr<Registers>(new Registers(can_id))),
   speed_(0)
 {
   configuration_state_ = 0;

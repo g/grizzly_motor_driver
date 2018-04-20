@@ -15,7 +15,7 @@ namespace grizzly_motor_driver
 class Registers
 {
 public:
-  Registers();
+  Registers(uint8_t can_id);
 
   std::shared_ptr<Register> getRegister(const uint16_t id);
   uint16_t getNumberOfWriteableIds() const;

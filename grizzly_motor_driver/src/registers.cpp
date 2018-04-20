@@ -7,7 +7,7 @@
 namespace grizzly_motor_driver
 {
 
-Registers::Registers() :
+Registers::Registers(uint8_t can_id) :
   io_scan_time_millis_(20),
   system_voltage_(48),
   max_speed_forward_(100),
@@ -17,7 +17,7 @@ Registers::Registers() :
 {
   ADD_REG(Registry::StartUpErrors, "START_UP_ERRORS", 0, 0, 65536, 1);
   ADD_REG(Registry::RunTimeErrors, "RUMTIME_ERRORS", 0, 0, 65536, 1);
-  ADD_REG(Registry::CkCityAddress, "CK_CITY_ADDRESS", 5, 1, 127, 1);
+  ADD_REG(Registry::CkCityAddress, "CK_CITY_ADDRESS", can_id, 1, 127, 1);
   ADD_REG(Registry::PreChargeVoltage, "PRE_CHARGE_VOLTAGE", 32, 48, 32, 1);
   ADD_REG(Registry::SystemVoltage, "SYSTEM_VOLTAGE", 48, 24, 48, 1);
   ADD_REG(Registry::AbsoluteCurrent, "ABSOLUTE_CURRENT", 300, 40, 450, 1);
@@ -44,7 +44,7 @@ Registers::Registers() :
   ADD_REG(Registry::IOActive, "I_O_ACTIVE", 0, 0, 255, 1);
   ADD_REG(Registry::HeartBeatEnabled, "HEART_BEAT_ENABLE", 1, 0, 1, 1);
   ADD_REG(Registry::HeartBeatTimer, "HEART_BEAT_TIMER", 100, 2, 16000, 1);
-  ADD_REG(Registry::StatusUpdateEnable, "STATUS_UPDATE_ENABLE", 1, 0, 1, 1);
+  ADD_REG(Registry::StatusUpdateEnable, "STATUS_UPDATE_ENABLE", 0, 0, 1, 1);
   ADD_REG(Registry::StatusUpdateTimer, "STATUS_UPDATE_TIMER", 5, 1, 16000, 1);
   ADD_REG(Registry::HeadingNetSelect, "HEADING_NET_SELECT", 170, 0, 170, 1);
   ADD_REG(Registry::HeadingAckEnable, "HEADING_ACK_ENABLE", 1, 0, 1, 1);
