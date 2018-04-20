@@ -39,6 +39,7 @@ public:
   float getDriverTemp() const;
   float getInputVoltage() const;
   float getOutputVoltage() const;
+  float getOutputCurrent() const;
 
 private:
   Interface& interface_;

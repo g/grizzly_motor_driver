@@ -41,6 +41,7 @@ Driver::Driver(Interface &interface, const uint8_t can_id, const std::string &na
 
 void Driver::configure()
 {
+  ROS_INFO("Driver %i: Configuring", can_id_);
   uint16_t reg = registers_->getWriteableId(configuration_state_);
 
   if (configuration_state_ >= registers_->getNumberOfWriteableIds())
@@ -213,6 +214,8 @@ void Driver::requestStatus()
   requestRegister(Registry::StartUpErrors);
   requestRegister(Registry::Temperature);
   requestRegister(Registry::BatVoltage);
+  requestRegister(Registry::MotVoltage);
+  requestRegister(Registry::ActualCurrent);
 }
 
 void Driver::readFrame(const Frame &frame)
@@ -230,10 +233,10 @@ void Driver::readFrame(const Frame &frame)
     return;
   }
   //ROS_INFO("%s: Got Frame for %d", name_.c_str(), frame.data.dest_reg)
-  if (frame.data.dest_reg == Registry::Heading)
-  {
-    ROS_ERROR("%s: Heading Frame: %i is: %i.", name_.c_str(), frame.data.dest_reg, frame.data.value);
-  }
+  // if (frame.data.dest_reg == Registry::Heading)
+  // {
+  //   ROS_ERROR("%s: Heading Frame: %i is: %i.", name_.c_str(), frame.data.dest_reg, frame.data.value);
+  // }
   if (registers_->getRegister(frame.data.dest_reg))
   {
     registers_->getRegister(frame.data.dest_reg)->setReceived();
@@ -255,9 +258,9 @@ void Driver::requestRegister(uint16_t id)
 
 void Driver::writeRegister(uint16_t id, float value)
 {
-  if(id == Registry::Heading){
-    ROS_ERROR("Writing Heading with value %d", static_cast<int32_t> (value));
-  }
+  // if(id == Registry::Heading){
+  //   ROS_ERROR("Writing Heading with value %d", static_cast<int32_t> (value));
+  // }
   Frame tx_frame;
   tx_frame.id = 0x00000060;
   tx_frame.len = 8;
@@ -313,5 +316,10 @@ float Driver::getInputVoltage() const
 float Driver::getOutputVoltage() const
 {
   return registers_->getRegister(Registry::MotVoltage)->getData();
+}
+
+float Driver::getOutputCurrent() const
+{
+  return registers_->getRegister(Registry::ActualCurrent)->getData();
 }
 }  // namespace grizzly_motor_driver

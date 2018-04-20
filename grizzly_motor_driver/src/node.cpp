@@ -47,6 +47,7 @@ void Node::publishStatus()
     status->temperature_driver = driver->getDriverTemp();
     status->voltage_input = driver->getInputVoltage();
     status->voltage_output = driver->getOutputVoltage();
+    status->current = driver->getOutputCurrent();
     status->error_runtime = driver->getRuntimeErrors();
     status->error_startup = driver->getStartupErrors();
     index++;
