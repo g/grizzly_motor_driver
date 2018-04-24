@@ -20,6 +20,7 @@ public:
 
   void configure();
   void run();
+  void setGearRatio(double ratio);
   void setSpeed(double cmd);
   void requestFeedback();
   void requestStatus();
@@ -53,8 +54,9 @@ private:
   bool configured_;
   uint16_t configuration_state_;
   uint16_t total_configuration_states_;
+  double gear_ratio_;
 
-  std::atomic<uint32_t> speed_;
+  std::atomic<int32_t> speed_;
 
   std::shared_ptr<Registers> registers_;
 };

@@ -178,8 +178,6 @@ void Driver::run()
       state_ = State::Running;
       break;
     case State::Running:
-      //commandSpeed();
-      writeRegister(Registry::TargetVelocity, speed_);
       ROS_INFO("Running");
       break;
     case State::Fault:
@@ -192,10 +190,15 @@ bool Driver::commandSpeed()
 {
   if (state_ == State::Running)
   {
-    writeRegister(Registry::Heading, speed_);
+    writeRegister(Registry::TargetVelocity, speed_);
     return(true);
   }
   return(false);
+}
+
+void Driver::setGearRatio(double ratio)
+{
+  gear_ratio_ = ratio;
 }
 
 void Driver::setSpeed(double cmd)
@@ -225,18 +228,12 @@ void Driver::readFrame(const Frame &frame)
     ROS_DEBUG("%s: Frame is not for me.", name_.c_str());
     return;
   }
-
   // All frams from the TPM have 8 bytes of data.
   if (frame.len < 8)
   {
     ROS_INFO("%s: Frame does not have enough data.", name_.c_str());
     return;
   }
-  //ROS_INFO("%s: Got Frame for %d", name_.c_str(), frame.data.dest_reg)
-  // if (frame.data.dest_reg == Registry::Heading)
-  // {
-  //   ROS_ERROR("%s: Heading Frame: %i is: %i.", name_.c_str(), frame.data.dest_reg, frame.data.value);
-  // }
   if (registers_->getRegister(frame.data.dest_reg))
   {
     registers_->getRegister(frame.data.dest_reg)->setReceived();
