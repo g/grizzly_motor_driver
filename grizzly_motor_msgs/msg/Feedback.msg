@@ -12,6 +12,3 @@ float64 travel
 
 # Angular velocity as measured by the encoder (rad/s).
 float64 velocity
-
-# The targeted angular velocity (rad/s).
-float64 velocity_target

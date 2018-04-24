@@ -178,8 +178,8 @@ void Driver::run()
       state_ = State::Running;
       break;
     case State::Running:
-      commandSpeed();
-    //  writeRegister(501, 543);
+      //commandSpeed();
+      writeRegister(Registry::TargetVelocity, speed_);
       ROS_INFO("Running");
       break;
     case State::Fault:
@@ -258,9 +258,6 @@ void Driver::requestRegister(uint16_t id)
 
 void Driver::writeRegister(uint16_t id, float value)
 {
-  // if(id == Registry::Heading){
-  //   ROS_ERROR("Writing Heading with value %d", static_cast<int32_t> (value));
-  // }
   Frame tx_frame;
   tx_frame.id = 0x00000060;
   tx_frame.len = 8;
@@ -271,9 +268,9 @@ void Driver::writeRegister(uint16_t id, float value)
   interface_.queue(tx_frame);
 }
 
-bool Driver::isConfigured() const
+bool Driver::isRunning() const
 {
-  return configured_;
+  return (state_ == State::Running);
 }
 
 std::string Driver::getName() const
@@ -291,6 +288,16 @@ uint8_t Driver::getId() const
 float Driver::getHeading() const
 {
   return registers_->getRegister(Registry::Heading)->getData();
+}
+
+float Driver::getMeasuredVelocity() const
+{
+  return registers_->getRegister(Registry::MeasuredVelocity)->getData();
+}
+
+float Driver::getMeasuredTravel() const
+{
+  return registers_->getRegister(Registry::MeasuredTravel)->getData();
 }
 
 uint16_t Driver::getRuntimeErrors() const

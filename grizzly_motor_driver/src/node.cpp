@@ -29,7 +29,9 @@ void Node::publishFeedback()
     grizzly_motor_msgs::Feedback* feedback = &feedback_msg_.feedbacks[index];
     feedback->device_number = driver->getId();
     feedback->device_name = driver->getName();
-
+    feedback->heading = driver->getHeading();
+    feedback->travel = driver->getMeasuredTravel();
+    feedback->velocity = driver->getMeasuredVelocity();
     index++;
   }
   feedback_msg_.header.stamp = ros::Time::now();

@@ -3,6 +3,7 @@
 
 #include "ros/ros.h"
 #include "std_msgs/Float64.h"
+#include "boost/assign.hpp"
 
 #include "grizzly_motor_driver/driver.h"
 #include "grizzly_motor_driver/frame.h"
@@ -14,17 +15,21 @@ class TestInterface
 {
 public:
   TestInterface(ros::NodeHandle& nh, ros::NodeHandle& pnh, grizzly_motor_driver::Interface& interface)
-    : nh_(nh), pnh_(pnh), interface_(interface), freq_(200), status_divisor_(3), active_(false)
+    : nh_(nh), pnh_(pnh), interface_(interface), freq_(25), status_divisor_(3), active_(false)
   {
+
+    ros::V_string joint_names = boost::assign::list_of("front_left_wheel")
+    ("front_right_wheel")("rear_left_wheel")("rear_right_wheel");
+    std::vector<uint8_t> joint_canids = boost::assign::list_of(5)(4)(2)(3);
+    std::vector<float> joint_directions = boost::assign::list_of(-1)(1)(-1)(1);
     drivers_.push_back(
        std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 3, "test1")));
     drivers_.push_back(
-      std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 4, "test2")));
+       std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 4, "test2")));
     drivers_.push_back(
-       std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 5, "test3")));
+        std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 5, "test3")));
     drivers_.push_back(
-      std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 6, "test4")));
-
+       std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 6, "test4")));
 
     node_.reset(new grizzly_motor_driver::Node(nh_, drivers_));
     velocitySub = pnh.subscribe("test_speed", 1, &TestInterface::velocityCB, this);
@@ -59,22 +64,21 @@ public:
         continue;
       }
 
-      if (isActive())
+      for (std::shared_ptr<grizzly_motor_driver::Driver>& driver : drivers_)
       {
-        for (std::shared_ptr<grizzly_motor_driver::Driver>& driver : drivers_)
+        driver->run();
+        if (status_divisor_ == driver->getId() && isActive())
         {
-          driver->run();
-          if (status_divisor_ == driver->getId())
-          {
-            ROS_INFO("Req. %d", status_divisor_);
-            driver->requestStatus();
-            //driver->requestFeedback();
-          }
+          ROS_INFO("Req. %d", status_divisor_);
+          driver->requestStatus();
+          driver->requestFeedback();
         }
-        status_divisor_++;
-        if (status_divisor_ > 6) //first address is 3
-          status_divisor_ = 3;
+        //if (isActive())
+          //driver->commandSpeed();
       }
+      status_divisor_++;
+      if (status_divisor_ > 6)  // first address is 3
+        status_divisor_ = 3;
 
       interface_.sendQueued();
       ros::spinOnce();
@@ -104,7 +108,7 @@ public:
   {
     for (std::shared_ptr<grizzly_motor_driver::Driver>& driver : drivers_)
     {
-      if (!driver->isConfigured())
+      if (!driver->isRunning())
       {
         active_ = false;
         return false;
@@ -113,6 +117,7 @@ public:
     active_ = true;
     return true;
   }
+
 private:
   ros::NodeHandle nh_, pnh_;
   grizzly_motor_driver::Interface& interface_;

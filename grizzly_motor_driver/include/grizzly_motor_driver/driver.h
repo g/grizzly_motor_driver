@@ -30,16 +30,19 @@ public:
   void writeRegister(uint16_t id);
   void writeRegister(uint16_t id, float value);
 
-  bool isConfigured() const;
+  bool isRunning() const;
   std::string getName() const;
   uint8_t getId() const;
   float getHeading() const;
+  float getMeasuredVelocity() const;
+  float getMeasuredTravel() const;
   uint16_t getRuntimeErrors() const;
   uint16_t getStartupErrors() const;
   float getDriverTemp() const;
   float getInputVoltage() const;
   float getOutputVoltage() const;
   float getOutputCurrent() const;
+  bool commandSpeed();
 
 private:
   Interface& interface_;
@@ -51,7 +54,6 @@ private:
   uint16_t configuration_state_;
   uint16_t total_configuration_states_;
 
-  bool commandSpeed();
   std::atomic<uint32_t> speed_;
 
   std::shared_ptr<Registers> registers_;

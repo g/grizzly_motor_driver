@@ -40,7 +40,7 @@ Registers::Registers(uint8_t can_id) :
   ADD_REG(Registry::IOScanTime, "I_O_SCAN_TIME", io_scan_time_millis_, 2, 40, 1);
   ADD_REG(Registry::SafeSeqEnable, "SAFE_SEQ_ENABLE", 0, 0, 1, 1);
   ADD_REG(Registry::IrComp, "IR_COMP", 10, 0, 100, 1);
-  ADD_REG(Registry::MotorResistance, "MOTOR_RESISTANCE", 10.24, 10, 255, 1.024);
+  ADD_REG(Registry::MotorResistance, "MOTOR_RESISTANCE", 10.25, 10, 255, 1.024);
   ADD_REG(Registry::IOActive, "I_O_ACTIVE", 0, 0, 255, 1);
   ADD_REG(Registry::HeartBeatEnabled, "HEART_BEAT_ENABLE", 1, 0, 1, 1);
   ADD_REG(Registry::HeartBeatTimer, "HEART_BEAT_TIMER", 100, 2, 16000, 1);
@@ -67,6 +67,8 @@ Registers::Registers(uint8_t can_id) :
   ADD_REG(Registry::BaseCharged, "BASE_CHARGED", 0, 0, 1, 1);
   ADD_REG(Registry::ControllerEnabled, "CONTROLLER_ENABLED", 0, 0, 1, 1);
   ADD_REG(Registry::StatusUpdate, "STATUS_UPDATE", 0, 0, 1, 1);
+  ADD_REG(Registry::MeasuredTravel, "MEASURED_TRAVEL", 0, 0, 1, 1);
+  ADD_REG(Registry::MeasuredVelocity, "MEASURED_VELOCITY", 0, 0, 1, 1);
 
   for (const auto &it : registers_)
   {

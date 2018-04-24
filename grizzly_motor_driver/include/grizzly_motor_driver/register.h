@@ -97,7 +97,10 @@ namespace Registries
     ResetController = 248,
     StatusUpdate = 255,
     EnableKeySw = 500,
-    CommandSpeed = 501
+    TargetVelocity = 501,
+    MeasuredTravel = 502,
+    MeasuredVelocity = 503
+
   };
 }  // namespace Registries
 typedef Registries::Registry Registry;
