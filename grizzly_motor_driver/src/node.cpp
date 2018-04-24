@@ -19,6 +19,9 @@ Node::Node(ros::NodeHandle& nh, std::vector<std::shared_ptr<grizzly_motor_driver
 
   feedback_pub_timer_ = nh_.createTimer(ros::Duration(1.0/25), &Node::feedbackTimerCb, this);
   status_pub_timer_ = nh_.createTimer(ros::Duration(1.0/1), &Node::statusTimerCb, this);
+
+  diagnostic_updater_.reset(new grizzly_motor_driver::GrizzlyMotorDriverDiagnosticUpdater());
+
 }
 
 void Node::publishFeedback()

@@ -11,6 +11,7 @@
 #include "grizzly_motor_msgs/Status.h"
 #include "grizzly_motor_msgs/MultiFeedback.h"
 #include "grizzly_motor_msgs/Feedback.h"
+#include "grizzly_motor_driver/diagnostic_updater.h"
 
 namespace grizzly_motor_driver
 {
@@ -39,6 +40,8 @@ private:
   ros::Timer feedback_pub_timer_;
 
   bool active_;
+
+  std::shared_ptr<grizzly_motor_driver::GrizzlyMotorDriverDiagnosticUpdater> diagnostic_updater_;
 };
 
 }  // namespace grizzly_motor_driver

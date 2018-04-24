@@ -9,7 +9,6 @@
 #include "grizzly_motor_driver/frame.h"
 #include "grizzly_motor_driver/interface.h"
 #include "grizzly_motor_driver/node.h"
-#include "grizzly_motor_driver/diagnostic_updater.h"
 
 class TestInterface
 {
@@ -64,7 +63,7 @@ public:
         continue;
       }
 
-      for (std::shared_ptr<grizzly_motor_driver::Driver>& driver : drivers_)
+      for (auto &driver : drivers_)
       {
         driver->run();
         if (status_divisor_ == driver->getId() && isActive())
@@ -73,8 +72,8 @@ public:
           driver->requestStatus();
           driver->requestFeedback();
         }
-        //if (isActive())
-          //driver->commandSpeed();
+        if (isActive())
+          driver->commandSpeed();
       }
       status_divisor_++;
       if (status_divisor_ > 6)  // first address is 3
@@ -87,7 +86,7 @@ public:
       grizzly_motor_driver::Frame rx_frame;
       while (interface_.receive(&rx_frame))
       {
-        for (std::shared_ptr<grizzly_motor_driver::Driver>& driver : drivers_)
+        for (auto &driver : drivers_)
         {
           driver->readFrame(rx_frame);
         }
@@ -106,7 +105,7 @@ public:
 
   bool isActive()
   {
-    for (std::shared_ptr<grizzly_motor_driver::Driver>& driver : drivers_)
+    for (const auto &driver : drivers_)
     {
       if (!driver->isRunning())
       {
@@ -146,7 +145,6 @@ int main(int argc, char* argv[])
 
   grizzly_motor_driver::Interface interface(can_device);
 
-  grizzly_motor_driver::GrizzlyMotorDriverDiagnosticUpdater grizzly_motor_driver_diagnostic_updater;
   TestInterface n(nh, pnh, interface);
   n.run();
 }
