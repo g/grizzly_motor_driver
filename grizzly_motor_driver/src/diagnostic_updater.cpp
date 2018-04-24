@@ -89,7 +89,6 @@ const char* GrizzlyMotorDriverDiagnosticUpdater::getStartupString(uint16_t fault
   }
 }
 
-
 void GrizzlyMotorDriverDiagnosticUpdater::temperatureDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat,
                                                                  int driver)
 {
@@ -118,7 +117,6 @@ void GrizzlyMotorDriverDiagnosticUpdater::temperatureDiagnostics(diagnostic_upda
 void GrizzlyMotorDriverDiagnosticUpdater::powerDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat,
                                                            int driver)
 {
-
   if (last_status_->statuses[driver].voltage_input > 35)
   {
     stat.summary(Status::OK, "Motor power is OK.");
@@ -137,7 +135,7 @@ void GrizzlyMotorDriverDiagnosticUpdater::powerDiagnostics(diagnostic_updater::D
 }
 
 void GrizzlyMotorDriverDiagnosticUpdater::errorDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat,
-                                                              int driver)
+                                                           int driver)
 {
   if (last_status_->statuses[driver].error_startup == 0 && last_status_->statuses[driver].error_runtime == 0)
   {
@@ -145,14 +143,14 @@ void GrizzlyMotorDriverDiagnosticUpdater::errorDiagnostics(diagnostic_updater::D
   }
   else if (last_status_->statuses[driver].error_startup > 0)
   {
-    stat.summaryf(Status::ERROR, "'%s' driver (%i) has a %s on startup.", (last_status_->statuses[driver].device_name.c_str()),
-                  last_status_->statuses[driver].device_number,
+    stat.summaryf(Status::ERROR, "'%s' driver (%i) has a %s on startup.",
+                  (last_status_->statuses[driver].device_name.c_str()), last_status_->statuses[driver].device_number,
                   getStartupString(last_status_->statuses[driver].error_startup));
   }
   else if (last_status_->statuses[driver].error_runtime > 0)
   {
-    stat.summaryf(Status::ERROR, "'%s' driver (%i) has a %s durring runtime.", (last_status_->statuses[driver].device_name.c_str()),
-                  last_status_->statuses[driver].device_number,
+    stat.summaryf(Status::ERROR, "'%s' driver (%i) has a %s durring runtime.",
+                  (last_status_->statuses[driver].device_name.c_str()), last_status_->statuses[driver].device_number,
                   getRuntimeString(last_status_->statuses[driver].error_runtime));
   }
 

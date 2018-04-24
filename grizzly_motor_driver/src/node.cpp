@@ -6,10 +6,8 @@
 
 namespace grizzly_motor_driver
 {
-
-Node::Node(ros::NodeHandle& nh, std::vector<std::shared_ptr<grizzly_motor_driver::Driver>>  drivers) :
-  nh_(nh),
-  drivers_(drivers)
+Node::Node(ros::NodeHandle& nh, std::vector<std::shared_ptr<grizzly_motor_driver::Driver>> drivers)
+  : nh_(nh), drivers_(drivers)
 {
   feedback_pub_ = nh_.advertise<grizzly_motor_msgs::MultiFeedback>("feedback", 1);
   status_pub_ = nh_.advertise<grizzly_motor_msgs::MultiStatus>("status", 1);
@@ -17,17 +15,16 @@ Node::Node(ros::NodeHandle& nh, std::vector<std::shared_ptr<grizzly_motor_driver
   feedback_msg_.feedbacks.resize(drivers_.size());
   status_msg_.statuses.resize(drivers_.size());
 
-  feedback_pub_timer_ = nh_.createTimer(ros::Duration(1.0/25), &Node::feedbackTimerCb, this);
-  status_pub_timer_ = nh_.createTimer(ros::Duration(1.0/1), &Node::statusTimerCb, this);
+  feedback_pub_timer_ = nh_.createTimer(ros::Duration(1.0 / 25), &Node::feedbackTimerCb, this);
+  status_pub_timer_ = nh_.createTimer(ros::Duration(1.0 / 1), &Node::statusTimerCb, this);
 
   diagnostic_updater_.reset(new grizzly_motor_driver::GrizzlyMotorDriverDiagnosticUpdater());
-
 }
 
 void Node::publishFeedback()
 {
   uint8_t index = 0;
-  for (const auto &driver : drivers_)
+  for (const auto& driver : drivers_)
   {
     grizzly_motor_msgs::Feedback* feedback = &feedback_msg_.feedbacks[index];
     feedback->device_number = driver->getId();
@@ -44,7 +41,7 @@ void Node::publishFeedback()
 void Node::publishStatus()
 {
   uint8_t index = 0;
-  for (const auto &driver : drivers_)
+  for (const auto& driver : drivers_)
   {
     grizzly_motor_msgs::Status* status = &status_msg_.statuses[index];
     status->device_number = driver->getId();

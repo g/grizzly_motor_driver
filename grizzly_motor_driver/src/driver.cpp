@@ -6,35 +6,34 @@
 
 namespace grizzly_motor_driver
 {
-
 namespace States
 {
-  enum State
-  {
-    Start = 0,
-    Configure,
-    CheckStartUpErrors,
-    VerifyStartUpErrors,
-    CheckHeading,
-    VerifyHeading,
-    CheckSro,
-    Stopped,
-    PreRunning,
-    Running,
-    Fault,
-    NumberOfStates
-  };
+enum State
+{
+  Start = 0,
+  Configure,
+  CheckStartUpErrors,
+  VerifyStartUpErrors,
+  CheckHeading,
+  VerifyHeading,
+  CheckSro,
+  Stopped,
+  PreRunning,
+  Running,
+  Fault,
+  NumberOfStates
+};
 }  // namespace States
 typedef States::State State;
 
-Driver::Driver(Interface &interface, const uint8_t can_id, const std::string &name) :
-  interface_(interface),
-  can_id_(can_id),
-  name_(name),
-  state_(State::Start),
-  configured_(false),
-  registers_(std::shared_ptr<Registers>(new Registers(can_id))),
-  speed_(0)
+Driver::Driver(Interface& interface, const uint8_t can_id, const std::string& name)
+  : interface_(interface)
+  , can_id_(can_id)
+  , name_(name)
+  , state_(State::Start)
+  , configured_(false)
+  , registers_(std::shared_ptr<Registers>(new Registers(can_id)))
+  , speed_(0)
 {
   configuration_state_ = 0;
 }
@@ -53,20 +52,16 @@ void Driver::configure()
 
   if (registers_->getRegister(reg)->wasReceived())
   {
-    if (registers_->getRegister(reg)->getRawData() ==
-      registers_->getRegister(reg)->getRawInitial())
+    if (registers_->getRegister(reg)->getRawData() == registers_->getRegister(reg)->getRawInitial())
     {
-      ROS_DEBUG("Match, got %d and wanted %d",
-        registers_->getRegister(reg)->getRawData(),
-        registers_->getRegister(reg)->getRawInitial());
+      ROS_DEBUG("Match, got %d and wanted %d", registers_->getRegister(reg)->getRawData(),
+                registers_->getRegister(reg)->getRawInitial());
       configuration_state_++;
     }
     else
     {
-      ROS_WARN("%s, trying to configure register %d failed, got %d and wanted %d. Retrying.",
-        name_.c_str(), reg,
-        registers_->getRegister(reg)->getRawData(),
-        registers_->getRegister(reg)->getRawInitial());
+      ROS_WARN("%s, trying to configure register %d failed, got %d and wanted %d. Retrying.", name_.c_str(), reg,
+               registers_->getRegister(reg)->getRawData(), registers_->getRegister(reg)->getRawInitial());
       writeRegister(reg, registers_->getRegister(reg)->sendInitial());
     }
     registers_->getRegister(reg)->clearReceived();
@@ -173,8 +168,8 @@ void Driver::run()
       break;
     case State::PreRunning:
       ROS_INFO("PreRunning");
-     writeRegister(Registry::EnableKeySw, 1);
-     writeRegister(Registry::Heading, 0);
+      writeRegister(Registry::EnableKeySw, 1);
+      writeRegister(Registry::Heading, 0);
       state_ = State::Running;
       break;
     case State::Running:
@@ -191,9 +186,9 @@ bool Driver::commandSpeed()
   if (state_ == State::Running)
   {
     writeRegister(Registry::TargetVelocity, speed_);
-    return(true);
+    return (true);
   }
-  return(false);
+  return (false);
 }
 
 void Driver::setGearRatio(double ratio)
@@ -221,7 +216,7 @@ void Driver::requestStatus()
   requestRegister(Registry::ActualCurrent);
 }
 
-void Driver::readFrame(const Frame &frame)
+void Driver::readFrame(const Frame& frame)
 {
   if (frame.getCanId() != can_id_)
   {
