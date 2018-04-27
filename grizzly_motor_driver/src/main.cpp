@@ -30,6 +30,10 @@ public:
         std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 6, "test4")));
 
     node_.reset(new grizzly_motor_driver::Node(nh_, drivers_));
+    for (const auto& driver : drivers_)
+    {
+      driver->setGearRatio(25.0);
+    }
     velocitySub = pnh.subscribe("test_speed", 1, &TestInterface::velocityCB, this);
   }
 

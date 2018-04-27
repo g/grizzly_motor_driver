@@ -108,7 +108,7 @@ bool Interface::receive(Frame *frame)
     {
       if (errno == EAGAIN)
       {
-        std::cout << "SocketCAN Interface: No more frames." << std::endl;
+        // std::cout << "SocketCAN Interface: No more frames." << std::endl;
       }
       else
       {
@@ -148,7 +148,7 @@ bool Interface::send(const can_frame *send_frame)
     std::cout << "SocketCAN Interface: Error in sending, not all bytes sent." << std::endl;
     return false;
   }
-  std::cout << "SocketCAN Interface: Send was successful." << std::endl;
+  // std::cout << "SocketCAN Interface: Send was successful." << std::endl;
   return true;
 }
 

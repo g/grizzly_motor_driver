@@ -32,6 +32,7 @@ public:
   void writeRegister(uint16_t id, float value);
 
   bool isRunning() const;
+  bool isFault() const;
   std::string getName() const;
   uint8_t getId() const;
   float getHeading() const;
@@ -44,6 +45,8 @@ public:
   float getOutputVoltage() const;
   float getOutputCurrent() const;
   bool commandSpeed();
+  void resetState();
+  void setFault();
 
 private:
   Interface& interface_;

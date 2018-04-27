@@ -176,7 +176,7 @@ void Driver::run()
       ROS_INFO("Running");
       break;
     case State::Fault:
-      ROS_ERROR("Fault");
+      ROS_ERROR_THROTTLE(1, "Fault");
       break;
   }
 }
@@ -185,10 +185,20 @@ bool Driver::commandSpeed()
 {
   if (state_ == State::Running)
   {
-    writeRegister(Registry::TargetVelocity, speed_);
+    writeRegister(Registry::TargetVelocity, speed_ * gear_ratio_);
     return (true);
   }
   return (false);
+}
+
+void Driver::resetState()
+{
+  state_ = State::Start;
+}
+
+void Driver::setFault()
+{
+  state_ = State::Fault;
 }
 
 void Driver::setGearRatio(double ratio)
@@ -265,6 +275,11 @@ bool Driver::isRunning() const
   return (state_ == State::Running);
 }
 
+bool Driver::isFault() const
+{
+  return (state_ == State::Fault);
+}
+
 std::string Driver::getName() const
 {
   return name_;
@@ -284,12 +299,12 @@ float Driver::getHeading() const
 
 float Driver::getMeasuredVelocity() const
 {
-  return registers_->getRegister(Registry::MeasuredVelocity)->getData();
+  return registers_->getRegister(Registry::MeasuredVelocity)->getData() / gear_ratio_;
 }
 
 float Driver::getMeasuredTravel() const
 {
-  return registers_->getRegister(Registry::MeasuredTravel)->getData();
+  return registers_->getRegister(Registry::MeasuredTravel)->getData() / gear_ratio_;
 }
 
 uint16_t Driver::getRuntimeErrors() const
