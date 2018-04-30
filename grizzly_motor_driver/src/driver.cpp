@@ -219,11 +219,15 @@ void Driver::requestFeedback()
 void Driver::requestStatus()
 {
   requestRegister(Registry::RunTimeErrors);
-  requestRegister(Registry::StartUpErrors);
   requestRegister(Registry::Temperature);
   requestRegister(Registry::BatVoltage);
   requestRegister(Registry::MotVoltage);
   requestRegister(Registry::ActualCurrent);
+  if (registers_->getRegister(Registry::RunTimeErrors)->getRawData() != 0) //check last run time error
+  {
+    state_ = State::Fault;
+    ROS_ERROR("Run Time Error(s) %d", registers_->getRegister(Registry::RunTimeErrors)->getRawData());
+  }
 }
 
 void Driver::readFrame(const Frame& frame)
