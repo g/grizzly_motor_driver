@@ -33,6 +33,7 @@ public:
 
   bool isRunning() const;
   bool isFault() const;
+  bool isStopping() const;
   std::string getName() const;
   uint8_t getId() const;
   float getHeading() const;
@@ -46,7 +47,7 @@ public:
   float getOutputCurrent() const;
   bool commandSpeed();
   void resetState();
-  void setFault();
+  void setStopping();
 
 private:
   Interface& interface_;

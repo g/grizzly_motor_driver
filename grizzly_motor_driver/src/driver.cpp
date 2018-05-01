@@ -14,6 +14,8 @@ enum State
   Configure,
   CheckStartUpErrors,
   VerifyStartUpErrors,
+  CheckRunTimeErrors,
+  VerifyRunTimeErrors,
   CheckHeading,
   VerifyHeading,
   CheckSro,
@@ -21,6 +23,7 @@ enum State
   PreRunning,
   Running,
   Fault,
+  Stopping,
   NumberOfStates
 };
 }  // namespace States
@@ -96,24 +99,50 @@ void Driver::run()
       state_ = State::VerifyStartUpErrors;
       break;
     case State::VerifyStartUpErrors:
-      ROS_INFO("State::VerifyStartUpErrors");
+      ROS_INFO("Driver %i: State::VerifyStartUpErrors", can_id_);
       if (registers_->getRegister(Registry::StartUpErrors)->wasReceived())
       {
         if (registers_->getRegister(Registry::StartUpErrors)->getRawData() == 0)
         {
-          state_ = State::CheckHeading;
+          state_ = State::CheckRunTimeErrors;
         }
         else
         {
           state_ = State::Fault;
-          ROS_ERROR("Start Up Error(s) %d", registers_->getRegister(Registry::StartUpErrors)->getRawData());
+          ROS_ERROR("Driver: %i Start Up Error(s) %d", can_id_,
+                    registers_->getRegister(Registry::StartUpErrors)->getRawData());
         }
         registers_->getRegister(Registry::StartUpErrors)->clearReceived();
       }
       else
       {
         state_ = State::CheckStartUpErrors;
-        ROS_INFO("No good");
+      }
+      break;
+    case State::CheckRunTimeErrors:
+      ROS_INFO("Driver %i: State::CheckRunTimeErrors", can_id_);
+      requestRegister(Registry::RunTimeErrors);
+      state_ = State::VerifyRunTimeErrors;
+      break;
+    case State::VerifyRunTimeErrors:
+      ROS_INFO("State::VerifyRunTimeErrors");
+      ROS_INFO("Driver %i: State::CheckRunTimeErrors", can_id_);
+      if (registers_->getRegister(Registry::RunTimeErrors)->wasReceived())
+      {
+        if (registers_->getRegister(Registry::RunTimeErrors)->getRawData() == 0)
+        {
+          state_ = State::CheckHeading;
+        }
+        else
+        {
+          state_ = State::Fault;
+          ROS_ERROR("Run Time Error(s) %d", registers_->getRegister(Registry::RunTimeErrors)->getRawData());
+        }
+        registers_->getRegister(Registry::RunTimeErrors)->clearReceived();
+      }
+      else
+      {
+        state_ = State::CheckRunTimeErrors;
       }
       break;
     case State::CheckHeading:
@@ -122,7 +151,7 @@ void Driver::run()
       state_ = State::VerifyHeading;
       break;
     case State::VerifyHeading:
-      ROS_INFO("VerifyHeading");
+      ROS_INFO("Driver %i: State::VerifyHeading", can_id_);
       if (registers_->getRegister(Registry::Heading)->wasReceived())
       {
         if (registers_->getRegister(Registry::Heading)->getRawData() == 0)
@@ -131,24 +160,23 @@ void Driver::run()
         }
         else
         {
-          state_ = State::Fault;
-          ROS_ERROR("Heading %d", registers_->getRegister(Registry::Heading)->getRawData());
+          writeRegister(Registry::Heading, 0);
         }
         registers_->getRegister(Registry::Heading)->clearReceived();
       }
       else
       {
-        state_ = State::CheckStartUpErrors;
+        state_ = State::CheckHeading;
         ROS_INFO("No good");
       }
       break;
     case State::CheckSro:
-      ROS_INFO("Driver %i: State::CheckSro", can_id_);
+      // ROS_INFO("Driver %i: State::CheckSro", can_id_);
       requestRegister(Registry::SroSw);
       state_ = State::Stopped;
       break;
     case State::Stopped:
-      ROS_INFO("State::Stopped");
+      // ROS_INFO("State::Stopped");
       if (registers_->getRegister(Registry::SroSw)->wasReceived())
       {
         if (registers_->getRegister(Registry::SroSw)->getRawData() != 0)
@@ -169,7 +197,6 @@ void Driver::run()
     case State::PreRunning:
       ROS_INFO("PreRunning");
       writeRegister(Registry::EnableKeySw, 1);
-      writeRegister(Registry::Heading, 0);
       state_ = State::Running;
       break;
     case State::Running:
@@ -177,6 +204,9 @@ void Driver::run()
       break;
     case State::Fault:
       ROS_ERROR_THROTTLE(1, "Fault");
+      break;
+    case State::Stopping:
+      ROS_ERROR_THROTTLE(1, "Stopping");
       break;
   }
 }
@@ -196,9 +226,9 @@ void Driver::resetState()
   state_ = State::Start;
 }
 
-void Driver::setFault()
+void Driver::setStopping()
 {
-  state_ = State::Fault;
+  state_ = State::Stopping;
 }
 
 void Driver::setGearRatio(double ratio)
@@ -223,7 +253,7 @@ void Driver::requestStatus()
   requestRegister(Registry::BatVoltage);
   requestRegister(Registry::MotVoltage);
   requestRegister(Registry::ActualCurrent);
-  if (registers_->getRegister(Registry::RunTimeErrors)->getRawData() != 0) //check last run time error
+  if (registers_->getRegister(Registry::RunTimeErrors)->getRawData() != 0)  // check last run time error
   {
     state_ = State::Fault;
     ROS_ERROR("Run Time Error(s) %d", registers_->getRegister(Registry::RunTimeErrors)->getRawData());
@@ -282,6 +312,11 @@ bool Driver::isRunning() const
 bool Driver::isFault() const
 {
   return (state_ == State::Fault);
+}
+
+bool Driver::isStopping() const
+{
+  return (state_ == State::Stopping);
 }
 
 std::string Driver::getName() const
