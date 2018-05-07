@@ -125,8 +125,7 @@ void Driver::run()
       state_ = State::VerifyRunTimeErrors;
       break;
     case State::VerifyRunTimeErrors:
-      ROS_INFO("State::VerifyRunTimeErrors");
-      ROS_INFO("Driver %i: State::CheckRunTimeErrors", can_id_);
+      ROS_INFO("Driver %i: State::VerifyRunTimeErrors", can_id_);
       if (registers_->getRegister(Registry::RunTimeErrors)->wasReceived())
       {
         if (registers_->getRegister(Registry::RunTimeErrors)->getRawData() == 0)
