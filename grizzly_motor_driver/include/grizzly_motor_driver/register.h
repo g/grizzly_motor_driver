@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <atomic>
 
 namespace grizzly_motor_driver
 {
@@ -95,7 +96,11 @@ namespace Registries
     ControllerEnabled = 247,
     ResetController = 248,
     StatusUpdate = 255,
-    EnableKeySw = 500
+    EnableKeySw = 500,
+    TargetVelocity = 501,
+    MeasuredTravel = 502,
+    MeasuredVelocity = 503
+
   };
 }  // namespace Registries
 typedef Registries::Registry Registry;
@@ -123,10 +128,10 @@ private:
   float max_;
   float initial_;
   int32_t raw_initial_;
-  float data_;
+  std::atomic<float> data_;
   int32_t raw_data_;
   float scale_;
-  bool received_;
+  std::atomic<bool> received_;
 };
 
 }  // namespace grizzly_motor_driver

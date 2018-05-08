@@ -1,25 +1,40 @@
-
 #include <string>
 #include <vector>
 
 #include "ros/ros.h"
+#include "std_msgs/Float64.h"
+#include "boost/assign.hpp"
 
 #include "grizzly_motor_driver/driver.h"
 #include "grizzly_motor_driver/frame.h"
 #include "grizzly_motor_driver/interface.h"
+#include "grizzly_motor_driver/node.h"
 
-class Node
+class TestInterface
 {
 public:
-  Node(ros::NodeHandle& nh,
-       ros::NodeHandle& pnh,
-       grizzly_motor_driver::Interface& interface) :
-    nh_(nh),
-    pnh_(pnh),
-    interface_(interface),
-    freq_(25)
+  TestInterface(ros::NodeHandle& nh, ros::NodeHandle& pnh, grizzly_motor_driver::Interface& interface)
+    : nh_(nh), pnh_(pnh), interface_(interface), freq_(25), status_divisor_(3), active_(false)
   {
-    drivers_.push_back(grizzly_motor_driver::Driver(interface_, 5, "test"));
+    ros::V_string joint_names =
+        boost::assign::list_of("front_left_wheel")("front_right_wheel")("rear_left_wheel")("rear_right_wheel");
+    std::vector<uint8_t> joint_canids = boost::assign::list_of(5)(4)(2)(3);
+    std::vector<float> joint_directions = boost::assign::list_of(-1)(1)(-1)(1);
+    drivers_.push_back(
+        std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 3, "test1")));
+    drivers_.push_back(
+        std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 4, "test2")));
+    drivers_.push_back(
+        std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 5, "test3")));
+    drivers_.push_back(
+        std::shared_ptr<grizzly_motor_driver::Driver>(new grizzly_motor_driver::Driver(interface_, 6, "test4")));
+
+    node_.reset(new grizzly_motor_driver::Node(nh_, drivers_));
+    for (const auto& driver : drivers_)
+    {
+      driver->setGearRatio(25.0);
+    }
+    velocity_sub = pnh.subscribe("test_speed", 1, &TestInterface::velocityCB, this);
   }
 
   bool connectIfNotConnected()
@@ -51,10 +66,21 @@ public:
         continue;
       }
 
-      for (grizzly_motor_driver::Driver& driver : drivers_)
+      for (auto& driver : drivers_)
       {
-        driver.run();
+        driver->run();
+        if (status_divisor_ == driver->getId() && isActive())
+        {
+          ROS_INFO("Req. %d", status_divisor_);
+          driver->requestStatus();
+          driver->requestFeedback();
+        }
+        if (isActive())
+          driver->commandSpeed();
       }
+      status_divisor_++;
+      if (status_divisor_ > 6)  // first address is 3
+        status_divisor_ = 3;
 
       interface_.sendQueued();
       ros::spinOnce();
@@ -63,24 +89,50 @@ public:
       grizzly_motor_driver::Frame rx_frame;
       while (interface_.receive(&rx_frame))
       {
-        for (grizzly_motor_driver::Driver& driver : drivers_)
+        for (auto& driver : drivers_)
         {
-          driver.readFrame(rx_frame);
+          driver->readFrame(rx_frame);
         }
       }
       rate.sleep();
     }
   }
 
+  void velocityCB(const std_msgs::Float64ConstPtr& msg)
+  {
+    for (std::shared_ptr<grizzly_motor_driver::Driver>& driver : drivers_)
+    {
+      driver->setSpeed(msg->data);
+    }
+  }
+
+  bool isActive()
+  {
+    for (const auto& driver : drivers_)
+    {
+      if (!driver->isRunning())
+      {
+        active_ = false;
+        return false;
+      }
+    }
+    active_ = true;
+    return true;
+  }
+
 private:
   ros::NodeHandle nh_, pnh_;
   grizzly_motor_driver::Interface& interface_;
-  std::vector<grizzly_motor_driver::Driver> drivers_;
+  std::vector<std::shared_ptr<grizzly_motor_driver::Driver>> drivers_;
+  std::shared_ptr<grizzly_motor_driver::Node> node_;
   double freq_;
+  uint8_t status_divisor_;
+  bool active_;
+  // temp sub for velocity testing
+  ros::Subscriber velocity_sub;
 };
 
-
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   std::string node_name = "node";
   ros::init(argc, argv, node_name.c_str());
@@ -96,6 +148,6 @@ int main(int argc, char *argv[])
 
   grizzly_motor_driver::Interface interface(can_device);
 
-  Node n(nh, pnh, interface);
+  TestInterface n(nh, pnh, interface);
   n.run();
 }

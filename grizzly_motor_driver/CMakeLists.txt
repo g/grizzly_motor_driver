@@ -4,13 +4,15 @@ project(grizzly_motor_driver)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 find_package(catkin REQUIRED COMPONENTS
+  diagnostic_updater
+  grizzly_motor_msgs
   roscpp
 )
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES grizzly_motor_driver
-  CATKIN_DEPENDS roscpp
+  CATKIN_DEPENDS diagnostic_updater roscpp
 )
 
 include_directories(
@@ -21,8 +23,10 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/driver.cpp
   src/interface.cpp
+  src/node.cpp
   src/register.cpp
   src/registers.cpp
+  src/diagnostic_updater.cpp
 )
 
 target_link_libraries(grizzly_motor_driver
@@ -37,6 +41,14 @@ target_link_libraries(test_node
 )
 
 if(CATKIN_ENABLE_TESTING)
+  find_package(roslint REQUIRED)
+  file(GLOB LINT_SRCS
+    src/*.cpp
+    include/*.h
+    test/*.cpp)
+  roslint_cpp(${LINT_SRCS})
+  roslint_add_test()
+
   catkin_add_gtest(test_can_frame test/test_can_frame.cpp)
   target_link_libraries(test_can_frame ${PROJECT_NAME})
 endif()

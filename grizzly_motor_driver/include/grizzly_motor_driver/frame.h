@@ -30,7 +30,7 @@ struct Frame
 
   uint32_t getCanId() const
   {
-    // TODO(tbaltovski): FIX THIS HACK!
+    // TODO(tbaltovski): FIX THIS!
     return (((id & 0xFFFFF7F8) | (id & 0x07)) >> 18);// & 0x00FF;
   }
 

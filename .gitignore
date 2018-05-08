@@ -1,0 +1,11 @@
+# Autosave
+*~
+*.autosave
+
+# Emacs
+.#*
+
+# Catkin custom files
+CATKIN_IGNORE
+# Autocomplete Clang
+compile_commands.json

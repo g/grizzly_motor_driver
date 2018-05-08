@@ -1,3 +1,5 @@
+#include <limits>
+#include <string>
 
 #include "grizzly_motor_driver/register.h"
 
@@ -7,14 +9,13 @@ namespace grizzly_motor_driver
   Register::Register(const std::string &name, float initial, float min, float max, float scale) :
     name_(name),
     initial_(initial),
-    data_(1000000.0),  // Set to large value to avoid verifying registers that are supposed to be zero.
     min_(min),
     max_(max),
     scale_(scale),
     received_(false)
 {
   raw_initial_ = static_cast<int32_t>(initial_ / scale_);
-  raw_data_ = static_cast<int32_t>(data_ / scale_);
+  data_ = std::numeric_limits<float>::quiet_NaN();
 }
 
 void Register::setReceived()
@@ -34,6 +35,7 @@ bool Register::wasReceived() const
 void Register::setData(float data)
 {
   data_ = data * scale_;
+  raw_data_ = static_cast<int32_t>(data_ / scale_);
 }
 
 float Register::sendData() const
