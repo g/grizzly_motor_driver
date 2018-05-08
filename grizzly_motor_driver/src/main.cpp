@@ -34,7 +34,7 @@ public:
     {
       driver->setGearRatio(25.0);
     }
-    velocitySub = pnh.subscribe("test_speed", 1, &TestInterface::velocityCB, this);
+    velocity_sub = pnh.subscribe("test_speed", 1, &TestInterface::velocityCB, this);
   }
 
   bool connectIfNotConnected()
@@ -129,7 +129,7 @@ private:
   uint8_t status_divisor_;
   bool active_;
   // temp sub for velocity testing
-  ros::Subscriber velocitySub;
+  ros::Subscriber velocity_sub;
 };
 
 int main(int argc, char* argv[])
