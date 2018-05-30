@@ -355,6 +355,11 @@ uint16_t Driver::getStartupErrors() const
   return registers_->getRegister(Registry::StartUpErrors)->getData();
 }
 
+float Driver::getMotorTemp() const
+{
+  return registers_->getRegister(Registry::MotorTemp)->getData();
+}
+
 float Driver::getDriverTemp() const
 {
   return registers_->getRegister(Registry::Temperature)->getData();
