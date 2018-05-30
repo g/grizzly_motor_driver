@@ -43,12 +43,12 @@ Driver::Driver(Interface& interface, const uint8_t can_id, const std::string& na
 
 void Driver::configure()
 {
-  ROS_INFO("Driver %i: Configuring", can_id_);
+  ROS_INFO_THROTTLE(1, "Driver %s (%i): Configuring", name_.c_str(), can_id_);
   uint16_t reg = registers_->getWriteableId(configuration_state_);
 
   if (configuration_state_ >= registers_->getNumberOfWriteableIds())
   {
-    ROS_INFO("%s was configured.", name_.c_str());
+    ROS_INFO("Driver %s (%i) was configured.", name_.c_str(), can_id_);
     configured_ = true;
     return;
   }
@@ -57,14 +57,14 @@ void Driver::configure()
   {
     if (registers_->getRegister(reg)->getRawData() == registers_->getRegister(reg)->getRawInitial())
     {
-      ROS_DEBUG("Match, got %d and wanted %d", registers_->getRegister(reg)->getRawData(),
-                registers_->getRegister(reg)->getRawInitial());
+      ROS_DEBUG("Driver %s (%i): Match, got %d and wanted %d", name_.c_str(), can_id_,
+          registers_->getRegister(reg)->getRawData(), registers_->getRegister(reg)->getRawInitial());
       configuration_state_++;
     }
     else
     {
-      ROS_WARN("%s, trying to configure register %d failed, got %d and wanted %d. Retrying.", name_.c_str(), reg,
-               registers_->getRegister(reg)->getRawData(), registers_->getRegister(reg)->getRawInitial());
+      ROS_WARN("Driver %s (%i), trying to configure register %d failed, got %d and wanted %d. Retrying.", name_.c_str(),
+          can_id_, reg, registers_->getRegister(reg)->getRawData(), registers_->getRegister(reg)->getRawInitial());
       writeRegister(reg, registers_->getRegister(reg)->sendInitial());
     }
     registers_->getRegister(reg)->clearReceived();
@@ -94,12 +94,12 @@ void Driver::run()
       }
       break;
     case State::CheckStartUpErrors:
-      ROS_INFO("Driver %i: State::CheckStartUpErrors", can_id_);
+      ROS_DEBUG("Driver %s (%i): State::CheckStartUpErrors", name_.c_str(), can_id_);
       requestRegister(Registry::StartUpErrors);
       state_ = State::VerifyStartUpErrors;
       break;
     case State::VerifyStartUpErrors:
-      ROS_INFO("Driver %i: State::VerifyStartUpErrors", can_id_);
+      ROS_DEBUG("Driver %s (%i): State::VerifyStartUpErrors", name_.c_str(), can_id_);
       if (registers_->getRegister(Registry::StartUpErrors)->wasReceived())
       {
         if (registers_->getRegister(Registry::StartUpErrors)->getRawData() == 0)
@@ -109,7 +109,7 @@ void Driver::run()
         else
         {
           state_ = State::Fault;
-          ROS_ERROR("Driver: %i Start Up Error(s) %d", can_id_,
+          ROS_ERROR("Driver %s (%i): Start Up Error(s) %d", name_.c_str(), can_id_,
                     registers_->getRegister(Registry::StartUpErrors)->getRawData());
         }
         registers_->getRegister(Registry::StartUpErrors)->clearReceived();
@@ -120,12 +120,12 @@ void Driver::run()
       }
       break;
     case State::CheckRunTimeErrors:
-      ROS_INFO("Driver %i: State::CheckRunTimeErrors", can_id_);
+      ROS_DEBUG("Driver %s (%i): State::CheckRunTimeErrors", name_.c_str(), can_id_);
       requestRegister(Registry::RunTimeErrors);
       state_ = State::VerifyRunTimeErrors;
       break;
     case State::VerifyRunTimeErrors:
-      ROS_INFO("Driver %i: State::VerifyRunTimeErrors", can_id_);
+      ROS_DEBUG("Driver %s (%i): State::VerifyRunTimeErrors", name_.c_str(), can_id_);
       if (registers_->getRegister(Registry::RunTimeErrors)->wasReceived())
       {
         if (registers_->getRegister(Registry::RunTimeErrors)->getRawData() == 0)
@@ -135,7 +135,8 @@ void Driver::run()
         else
         {
           state_ = State::Fault;
-          ROS_ERROR("Run Time Error(s) %d", registers_->getRegister(Registry::RunTimeErrors)->getRawData());
+          ROS_ERROR("Driver %s (%i): Run Time Error(s) %d",name_.c_str(), can_id_,
+              registers_->getRegister(Registry::RunTimeErrors)->getRawData());
         }
         registers_->getRegister(Registry::RunTimeErrors)->clearReceived();
       }
@@ -145,12 +146,12 @@ void Driver::run()
       }
       break;
     case State::CheckHeading:
-      ROS_INFO("Driver %i: State::CheckHeading", can_id_);
+      ROS_DEBUG("Driver %s (%i): State::CheckHeading", name_.c_str(), can_id_);
       requestRegister(Registry::Heading);
       state_ = State::VerifyHeading;
       break;
     case State::VerifyHeading:
-      ROS_INFO("Driver %i: State::VerifyHeading", can_id_);
+      ROS_DEBUG("Driver %s (%i): State::VerifyHeading", name_.c_str(), can_id_);
       if (registers_->getRegister(Registry::Heading)->wasReceived())
       {
         if (registers_->getRegister(Registry::Heading)->getRawData() == 0)
@@ -166,16 +167,15 @@ void Driver::run()
       else
       {
         state_ = State::CheckHeading;
-        ROS_INFO("No good");
       }
       break;
     case State::CheckSro:
-      // ROS_INFO("Driver %i: State::CheckSro", can_id_);
+      ROS_WARN_THROTTLE(1, "Driver %s (%i): Check SRO", name_.c_str(), can_id_);
       requestRegister(Registry::SroSw);
       state_ = State::Stopped;
       break;
     case State::Stopped:
-      // ROS_INFO("State::Stopped");
+      ROS_WARN_THROTTLE(1, "Driver %s (%i): Stopped", name_.c_str(), can_id_);
       if (registers_->getRegister(Registry::SroSw)->wasReceived())
       {
         if (registers_->getRegister(Registry::SroSw)->getRawData() != 0)
@@ -199,13 +199,13 @@ void Driver::run()
       state_ = State::Running;
       break;
     case State::Running:
-      ROS_INFO("Running");
+      ROS_INFO("Driver %s (%i): State::Running", name_.c_str(), can_id_);
       break;
     case State::Fault:
-      ROS_ERROR_THROTTLE(1, "Fault");
+      ROS_ERROR_THROTTLE(1, "Driver %s (%i): Fault", name_.c_str(), can_id_);
       break;
     case State::Stopping:
-      ROS_ERROR_THROTTLE(1, "Stopping");
+      ROS_WARN_THROTTLE(1, "Driver %s (%i): Stopping", name_.c_str(), can_id_);
       break;
   }
 }
@@ -243,19 +243,46 @@ void Driver::setSpeed(float cmd)
 void Driver::requestFeedback()
 {
   requestRegister(Registry::SroSw);
+  static uint8_t count = 0;
+  if (count == 4)
+    isConnected();
+  count++;
+  if (count > 4)
+    count = 0;
 }
 
 void Driver::requestStatus()
 {
-  requestRegister(Registry::RunTimeErrors);
-  requestRegister(Registry::Temperature);
-  requestRegister(Registry::BatVoltage);
-  requestRegister(Registry::MotVoltage);
-  requestRegister(Registry::ActualCurrent);
+  static uint8_t status_item = 0;
+  switch (status_item)
+  {
+    case 0:
+      requestRegister(Registry::RunTimeErrors);
+      break;
+    case 1:
+      requestRegister(Registry::Temperature);
+      break;
+    case 2:
+      requestRegister(Registry::BatVoltage);
+      break;
+    case 3:
+      requestRegister(Registry::MotVoltage);
+      break;
+    case 4:
+      requestRegister(Registry::ActualCurrent);
+      break;
+  }
+  status_item++;
+  if (status_item > 4)
+  {
+    status_item = 0;
+  }
+
   if (registers_->getRegister(Registry::RunTimeErrors)->getRawData() != 0)  // check last run time error
   {
     state_ = State::Fault;
-    ROS_ERROR("Run Time Error(s) %d", registers_->getRegister(Registry::RunTimeErrors)->getRawData());
+    ROS_ERROR("Driver %s (%i): Run Time Error(s) %d", name_.c_str(), can_id_,
+        registers_->getRegister(Registry::RunTimeErrors)->getRawData());
   }
 }
 
@@ -263,13 +290,13 @@ void Driver::readFrame(const Frame& frame)
 {
   if (frame.getCanId() != can_id_)
   {
-    ROS_DEBUG("%s: Frame is not for me.", name_.c_str());
+    ROS_DEBUG("Driver %s (%i): Frame is not for me.", name_.c_str(), can_id_);
     return;
   }
   // All frams from the TPM have 8 bytes of data.
   if (frame.len < 8)
   {
-    ROS_INFO("%s: Frame does not have enough data.", name_.c_str());
+    ROS_DEBUG("Driver %s (%i): Frame does not have enough data.", name_.c_str(), can_id_);
     return;
   }
   if (registers_->getRegister(frame.data.dest_reg))
@@ -347,6 +374,7 @@ float Driver::getMeasuredTravel() const
 
 uint16_t Driver::getRuntimeErrors() const
 {
+  registers_->getRegister(Registry::RunTimeErrors)->clearReceived();
   return registers_->getRegister(Registry::RunTimeErrors)->getData();
 }
 
@@ -388,4 +416,30 @@ float Driver::getSpeed() const
 {
   return speed_;
 }
+
+void Driver::isConnected()
+{
+  if (state_ != State::Running)
+  {
+    lost_messages_ = 0;
+    return;
+  }
+
+  if (registers_->getRegister(Registry::RunTimeErrors)->wasReceived())
+  {
+    lost_messages_ = 0;
+  }
+  else
+  {
+    lost_messages_++;
+  }
+
+  if (lost_messages_ > 15)
+  {
+    state_ = State::Fault;
+    ROS_ERROR("Driver %s (%i): Not get data from driver. %i", name_.c_str(), can_id_, lost_messages_);
+    lost_messages_ = 0;
+  }
+}
+
 }  // namespace grizzly_motor_driver

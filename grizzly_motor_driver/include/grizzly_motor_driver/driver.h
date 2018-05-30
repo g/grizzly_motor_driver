@@ -50,6 +50,8 @@ public:
   bool commandSpeed();
   void resetState();
   void setStopping();
+  void isConnected();
+
 
 private:
   Interface& interface_;
@@ -59,7 +61,7 @@ private:
   uint8_t state_;
   bool configured_;
   uint16_t configuration_state_;
-  uint16_t total_configuration_states_;
+  uint8_t lost_messages_;
   double gear_ratio_;
   std::atomic<float> speed_;
 
