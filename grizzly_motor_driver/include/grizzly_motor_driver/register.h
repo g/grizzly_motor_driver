@@ -121,6 +121,7 @@ public:
   float sendInitial() const;
   float getInitial() const;
   int32_t getRawInitial() const;
+  float getScale() const;
 
 private:
   std::string name_;
@@ -129,7 +130,7 @@ private:
   float initial_;
   int32_t raw_initial_;
   std::atomic<float> data_;
-  int32_t raw_data_;
+  std::atomic<int32_t> raw_data_;
   float scale_;
   std::atomic<bool> received_;
 };

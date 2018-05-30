@@ -73,4 +73,9 @@ int32_t Register::getRawInitial() const
   return raw_initial_;
 }
 
+float Register::getScale() const
+{
+  return scale_;
+}
+
 }  // namespace grizzly_motor_driver
