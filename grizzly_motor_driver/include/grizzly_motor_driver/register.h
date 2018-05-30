@@ -99,7 +99,8 @@ namespace Registries
     EnableKeySw = 500,
     TargetVelocity = 501,
     MeasuredTravel = 502,
-    MeasuredVelocity = 503
+    MeasuredVelocity = 503,
+    MotorTemp = 504
 
   };
 }  // namespace Registries

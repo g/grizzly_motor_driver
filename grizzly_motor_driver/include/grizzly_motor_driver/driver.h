@@ -41,6 +41,7 @@ public:
   float getMeasuredTravel() const;
   uint16_t getRuntimeErrors() const;
   uint16_t getStartupErrors() const;
+  float getMotorTemp() const;
   float getDriverTemp() const;
   float getInputVoltage() const;
   float getOutputVoltage() const;

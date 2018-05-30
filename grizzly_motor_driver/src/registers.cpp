@@ -69,6 +69,7 @@ Registers::Registers(uint8_t can_id) :
   ADD_REG(Registry::StatusUpdate, "STATUS_UPDATE", 0, 0, 1, 1);
   ADD_REG(Registry::MeasuredTravel, "MEASURED_TRAVEL", 0, 0, 1, 1);
   ADD_REG(Registry::MeasuredVelocity, "MEASURED_VELOCITY", 0, 0, 1, 1);
+  ADD_REG(Registry::MotorTemp, "MOTOR_TEMPERATURE", 0, 0, 1, 1);
 
   for (const auto &it : registers_)
   {
