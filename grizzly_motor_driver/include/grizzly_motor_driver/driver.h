@@ -21,7 +21,7 @@ public:
   void configure();
   void run();
   void setGearRatio(double ratio);
-  void setSpeed(double cmd);
+  void setSpeed(float cmd);
   void requestFeedback();
   void requestStatus();
 
@@ -45,6 +45,7 @@ public:
   float getInputVoltage() const;
   float getOutputVoltage() const;
   float getOutputCurrent() const;
+  float getSpeed() const;
   bool commandSpeed();
   void resetState();
   void setStopping();
@@ -59,8 +60,7 @@ private:
   uint16_t configuration_state_;
   uint16_t total_configuration_states_;
   double gear_ratio_;
-
-  std::atomic<int32_t> speed_;
+  std::atomic<float> speed_;
 
   std::shared_ptr<Registers> registers_;
 };

@@ -235,9 +235,9 @@ void Driver::setGearRatio(double ratio)
   gear_ratio_ = ratio;
 }
 
-void Driver::setSpeed(double cmd)
+void Driver::setSpeed(float cmd)
 {
-  speed_ = static_cast<int32_t>(cmd);
+  speed_ = cmd;
 }
 
 void Driver::requestFeedback()
@@ -367,11 +367,20 @@ float Driver::getInputVoltage() const
 
 float Driver::getOutputVoltage() const
 {
-  return registers_->getRegister(Registry::MotVoltage)->getData();
+  // This data is stored as int16 but put into a int32 which causes the sign to be in correct.  It is corrected below.
+  return (static_cast<float>(static_cast<int16_t>(registers_->getRegister(Registry::MotVoltage)->getRawData()))
+         * registers_->getRegister(Registry::MotVoltage)->getScale());
 }
 
 float Driver::getOutputCurrent() const
 {
-  return registers_->getRegister(Registry::ActualCurrent)->getData();
+  // This data is stored as int16 but put into a int32 which causes the sign to be in correct.  It is corrected below.
+  return (static_cast<float>(static_cast<int16_t>(registers_->getRegister(Registry::ActualCurrent)->getRawData()))
+         * registers_->getRegister(Registry::ActualCurrent)->getScale());
+}
+
+float Driver::getSpeed() const
+{
+  return speed_;
 }
 }  // namespace grizzly_motor_driver
