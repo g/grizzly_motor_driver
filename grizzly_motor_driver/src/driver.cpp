@@ -21,6 +21,8 @@ enum State
   CheckSro,
   Stopped,
   PreRunning,
+  CheckEnable,
+  VerifyEnable,
   Running,
   Fault,
   Stopping,
@@ -194,12 +196,37 @@ void Driver::run()
       }
       break;
     case State::PreRunning:
-      ROS_INFO("PreRunning");
+      ROS_DEBUG("Driver %s (%i): State::PreRunning", name_.c_str(), can_id_);
       writeRegister(Registry::EnableKeySw, 1);
-      state_ = State::Running;
+      state_ = State::CheckEnable;
+      break;
+    case State::CheckEnable:
+      ROS_DEBUG("Driver %s (%i): State::CheckEnable", name_.c_str(), can_id_);
+      requestRegister(Registry::ControllerEnabled);
+      state_ = State::VerifyEnable;
+      break;
+    case State::VerifyEnable:
+      ROS_DEBUG("Driver %s (%i): VerifyEnable", name_.c_str(), can_id_);
+      if (registers_->getRegister(Registry::ControllerEnabled)->wasReceived())
+      {
+        if (registers_->getRegister(Registry::ControllerEnabled)->getRawData() == 0)
+        {
+          state_ = State::PreRunning;
+        }
+        else
+        {
+          state_ = State::Running;
+          ROS_INFO("Driver %s (%i): Entering running state.", name_.c_str(), can_id_);
+        }
+        registers_->getRegister(Registry::ControllerEnabled)->clearReceived();
+      }
+      else
+      {
+        state_ = State::CheckEnable;
+      }
       break;
     case State::Running:
-      ROS_INFO("Driver %s (%i): State::Running", name_.c_str(), can_id_);
+      ROS_DEBUG("Driver %s (%i): State::Running", name_.c_str(), can_id_);
       break;
     case State::Fault:
       ROS_ERROR_THROTTLE(1, "Driver %s (%i): Fault", name_.c_str(), can_id_);
@@ -278,7 +305,7 @@ void Driver::requestStatus()
     status_item = 0;
   }
 
-  if (registers_->getRegister(Registry::RunTimeErrors)->getRawData() != 0)  // check last run time error
+  if ((registers_->getRegister(Registry::RunTimeErrors)->getRawData() != 0) && configured_)  // check last run time error
   {
     state_ = State::Fault;
     ROS_ERROR("Driver %s (%i): Run Time Error(s) %d", name_.c_str(), can_id_,
@@ -296,7 +323,7 @@ void Driver::readFrame(const Frame& frame)
   // All frams from the TPM have 8 bytes of data.
   if (frame.len < 8)
   {
-    ROS_DEBUG("Driver %s (%i): Frame does not have enough data.", name_.c_str(), can_id_);
+    ROS_WARN("Driver %s (%i): Frame does not have enough data.", name_.c_str(), can_id_);
     return;
   }
   if (registers_->getRegister(frame.data.dest_reg))
@@ -434,7 +461,7 @@ void Driver::isConnected()
     lost_messages_++;
   }
 
-  if (lost_messages_ > 15)
+  if (lost_messages_ > 25)
   {
     state_ = State::Fault;
     ROS_ERROR("Driver %s (%i): Not get data from driver. %i", name_.c_str(), can_id_, lost_messages_);
