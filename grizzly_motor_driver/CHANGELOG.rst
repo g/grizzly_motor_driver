@@ -2,8 +2,8 @@
 Changelog for package grizzly_motor_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.1 (2018-06-06)
+------------------
 * Ignored linter error.
 * Removed tests and fixed linter errors.
 * Added checking for the TPM being enabled during configuring and reduced logging.
