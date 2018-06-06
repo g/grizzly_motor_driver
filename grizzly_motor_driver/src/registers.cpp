@@ -23,8 +23,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 
 #include "grizzly_motor_driver/registers.h"
 
-#define ADD_REG(id, name, initial, min, max, scale) registers_[id]
-          = std::make_shared<Register>(name, initial, min, max, scale)
+#define ADD_REG(id, name, initial, min, max, scale) registers_[id] = std::make_shared<Register>(name, initial, min, max, scale)  // NOLINT(whitespace/line_length)
 
 namespace grizzly_motor_driver
 {
