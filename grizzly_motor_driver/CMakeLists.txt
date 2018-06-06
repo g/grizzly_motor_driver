@@ -44,11 +44,7 @@ if(CATKIN_ENABLE_TESTING)
   find_package(roslint REQUIRED)
   file(GLOB LINT_SRCS
     src/*.cpp
-    include/*.h
-    test/*.cpp)
+    include/*.h)
   roslint_cpp(${LINT_SRCS})
   roslint_add_test()
-
-  catkin_add_gtest(test_can_frame test/test_can_frame.cpp)
-  target_link_libraries(test_can_frame ${PROJECT_NAME})
 endif()

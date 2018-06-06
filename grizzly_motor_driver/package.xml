@@ -16,5 +16,4 @@
   <exec_depend>can-utils</exec_depend>
 
   <test_depend>roslint</test_depend>
-  <test_depend>rosunit</test_depend>
 </package>
