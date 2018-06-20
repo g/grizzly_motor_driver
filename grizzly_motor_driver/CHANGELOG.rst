@@ -2,8 +2,8 @@
 Changelog for package grizzly_motor_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.2 (2018-06-20)
+------------------
 * [grizzly_motor_driver] Installed library and node.
 * Contributors: Tony Baltovski
 
