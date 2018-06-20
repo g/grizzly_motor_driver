@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES grizzly_motor_driver
-  CATKIN_DEPENDS diagnostic_updater roscpp
+  CATKIN_DEPENDS diagnostic_updater grizzly_motor_msgs roscpp
 )
 
 include_directories(
@@ -40,6 +40,19 @@ target_link_libraries(test_node
   ${catkin_LIBRARIES}
 )
 
+# Install
+install(TARGETS grizzly_motor_driver test_node
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
+
+
+# Testing
 if(CATKIN_ENABLE_TESTING)
   find_package(roslint REQUIRED)
   file(GLOB LINT_SRCS
