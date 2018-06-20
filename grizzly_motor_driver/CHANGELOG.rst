@@ -2,6 +2,11 @@
 Changelog for package grizzly_motor_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [grizzly_motor_driver] Installed library and node.
+* Contributors: Tony Baltovski
+
 0.0.1 (2018-06-06)
 ------------------
 * Ignored linter error.

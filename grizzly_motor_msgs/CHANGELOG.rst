@@ -2,6 +2,9 @@
 Changelog for package grizzly_motor_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.0.1 (2018-06-06)
 ------------------
 * Added new registers and switched to sending motion commands instead of heading.  Updated feedback publishing
