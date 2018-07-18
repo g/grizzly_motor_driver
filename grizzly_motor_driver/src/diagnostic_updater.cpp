@@ -44,9 +44,9 @@ const char* GrizzlyMotorDriverDiagnosticUpdater::getRuntimeString(uint16_t fault
     case grizzly_motor_msgs::Status::ERROR_RUNTIME_HW_SHUTDOWN:
       return "hardware shutdown fault";
     case grizzly_motor_msgs::Status::ERROR_RUNTIME_POT1_OPEN:
-      return "pot 1 open falt";
+      return "pot 1 open fault";
     case grizzly_motor_msgs::Status::ERROR_RUNTIME_POT2_OPEN:
-      return "pot 2 open falt";
+      return "pot 2 open fault";
     case grizzly_motor_msgs::Status::ERROR_RUNTIME_BOTH_DIR_SWITCHES:
       return "both direction switches enabled fault";
     case grizzly_motor_msgs::Status::ERROR_RUNTIME_OVER_TEMP:
@@ -56,7 +56,7 @@ const char* GrizzlyMotorDriverDiagnosticUpdater::getRuntimeString(uint16_t fault
     case grizzly_motor_msgs::Status::ERROR_RUNTIME_BATTERY_OVER_VOLTAGE_ON_START:
       return "battery over voltage on start fault";
     case grizzly_motor_msgs::Status::ERROR_RUNTIME_BATTERY_UNDER_VOLTAGE_ON_START:
-      return "battery under volatge on start fault";
+      return "battery under voltage on start fault";
     case grizzly_motor_msgs::Status::ERROR_RUNTIME_BASE_DISCHARGED:
       return "base discharged fault";
     default:
@@ -73,9 +73,9 @@ const char* GrizzlyMotorDriverDiagnosticUpdater::getStartupString(uint16_t fault
     case grizzly_motor_msgs::Status::ERROR_STARTUP_MAX_GREATER_THAN_MIN:
       return "max greater than min fault";
     case grizzly_motor_msgs::Status::ERROR_STARTUP_THROTTLE_RANGE_TOO_SMALL:
-      return "throttle range too small falt";
+      return "throttle range too small fault";
     case grizzly_motor_msgs::Status::ERROR_STARTUP_THROTTLE_RANGE_TOO_LARGE:
-      return "throttle range too large falt";
+      return "throttle range too large fault";
     case grizzly_motor_msgs::Status::ERROR_STARTUP_CURRENT_SENSOR_CALIBRATION:
       return "current sensor calibration fault";
     case grizzly_motor_msgs::Status::ERROR_STARTUP_HW_SHUT_DOWN:
@@ -149,7 +149,7 @@ void GrizzlyMotorDriverDiagnosticUpdater::errorDiagnostics(diagnostic_updater::D
   }
   else if (last_status_->statuses[driver].error_runtime > 0)
   {
-    stat.summaryf(Status::ERROR, "'%s' driver (%i) has a %s durring runtime.",
+    stat.summaryf(Status::ERROR, "'%s' driver (%i) has a %s during runtime.",
                   (last_status_->statuses[driver].device_name.c_str()), last_status_->statuses[driver].device_number,
                   getRuntimeString(last_status_->statuses[driver].error_runtime));
   }
